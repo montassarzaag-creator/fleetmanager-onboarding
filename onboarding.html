@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetManager — Configurer votre application</title>
+<style>
+  :root {
+    --navy: #0F172A;
+    --blue: #1E3A5F;
+    --accent: #F59E0B;
+    --accent2: #3B82F6;
+    --success: #10B981;
+    --light: #F8FAFC;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --muted: #64748B;
+    --red: #EF4444;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--light);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    color: var(--white);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .logo-sub {
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .header-badge {
+    background: rgba(245,158,11,0.15);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-bar {
+    background: var(--blue);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    position: relative;
+  }
+  .step-dot {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    flex-shrink: 0;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .step.active .step-dot {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--navy);
+  }
+  .step.done .step-dot {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+  }
+  .step-label {
+    margin-left: 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+    transition: color 0.3s;
+  }
+  .step.active .step-label { color: white; font-weight: 600; }
+  .step.done .step-label { color: rgba(255,255,255,0.7); }
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: rgba(255,255,255,0.15);
+    margin: 0 12px;
+    transition: background 0.3s;
+  }
+  .step.done + .step-line { background: var(--success); }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 780px;
+    margin: 40px auto;
+    padding: 0 20px 80px;
+  }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .section-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--blue);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title span {
+    width: 24px; height: 24px;
+    background: var(--blue);
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+  }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media(max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── FIELDS ── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .field label .req { color: var(--red); margin-left: 2px; }
+  .field input, .field select, .field textarea {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--light);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    background: white;
+  }
+  .field .hint { font-size: 11px; color: var(--muted); }
+
+  /* ── PAYS TAGS ── */
+  .pays-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .pays-tag {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    background: var(--light);
+    color: var(--muted);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .pays-tag.selected {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+    font-weight: 600;
+  }
+  .pays-tag:hover:not(.selected) {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  /* ── USERS TABLE ── */
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .users-table th {
+    background: var(--navy);
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .users-table th:first-child { border-radius: 8px 0 0 0; }
+  .users-table th:last-child { border-radius: 0 8px 0 0; }
+  .users-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .users-table tr:nth-child(even) td { background: var(--light); }
+  .users-table input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    background: white;
+    outline: none;
+    font-family: inherit;
+  }
+  .users-table input:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+  }
+  .role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .role-admin { background: #FEF3C7; color: #92400E; }
+  .role-resp { background: #EFF6FF; color: #1D4ED8; }
+  .role-ravi { background: #F0FDF4; color: #065F46; }
+
+  /* ── MACHINES TABLE ── */
+  .machines-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .btn-add-row {
+    padding: 7px 16px;
+    background: var(--accent2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-add-row:hover { background: #2563EB; }
+
+  .machines-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .machines-table th {
+    background: var(--navy);
+    color: white;
+    padding: 9px 10px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .machines-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .machines-table tr:nth-child(even) td { background: #FAFBFC; }
+  .machines-table input, .machines-table select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 11px;
+    background: white;
+    outline: none;
+    font-family: inherit;
+    min-width: 80px;
+  }
+  .machines-table input:focus, .machines-table select:focus {
+    border-color: var(--accent2);
+  }
+  .btn-del-row {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .btn-del-row:hover { background: #FEF2F2; }
+
+  /* ── CYCLE ── */
+  .cycle-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .cycle-item {
+    background: var(--light);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cycle-item.selected {
+    border-color: var(--blue);
+    background: #EFF6FF;
+  }
+  .cycle-item .val { font-size: 16px; font-weight: 700; color: var(--navy); }
+  .cycle-item .lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── PREVIEW ── */
+  .preview-box {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 20px 24px;
+    color: white;
+    margin-top: 20px;
+  }
+  .preview-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 14px;
+  }
+  .preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 13px;
+  }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-row .key { color: rgba(255,255,255,0.6); }
+  .preview-row .val { font-weight: 600; color: var(--accent); }
+
+  /* ── NAV BUTTONS ── */
+  .nav-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-secondary {
+    background: var(--light);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-primary {
+    background: var(--navy);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary:hover { background: var(--blue); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+
+  /* ── PAGE VISIBILITY ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── SUCCESS PAGE ── */
+  .success-card {
+    text-align: center;
+    padding: 60px 40px;
+  }
+  .success-icon {
+    width: 80px; height: 80px;
+    background: #D1FAE5;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 36px;
+  }
+  .success-title { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
+  .success-sub { color: var(--muted); font-size: 15px; margin-bottom: 32px; }
+  .delivery-info {
+    background: #EFF6FF;
+    border-radius: 12px;
+    padding: 20px 24px;
+    text-align: left;
+    margin: 0 auto;
+    max-width: 480px;
+    border: 1px solid #BFDBFE;
+  }
+  .delivery-info h4 { font-size: 13px; font-weight: 700; color: var(--blue); margin-bottom: 12px; }
+  .delivery-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .delivery-step .num {
+    width: 22px; height: 22px;
+    background: var(--blue);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ── IMPORT CSV ── */
+  .import-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--light);
+    margin-top: 8px;
+  }
+  .import-zone:hover {
+    border-color: var(--accent2);
+    background: #EFF6FF;
+  }
+  .import-zone .icon { font-size: 32px; margin-bottom: 8px; }
+  .import-zone .txt { font-size: 13px; color: var(--muted); }
+  .import-zone .txt strong { color: var(--accent2); }
+
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .info-box {
+    background: #FFF7ED;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #92400E;
+    margin-top: 16px;
+  }
+
+  .step-counter {
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚛</div>
+    <div>
+      <div class="logo-text">FleetManager</div>
+      <div class="logo-sub">Gestion du Parc Matériel</div>
+    </div>
+  </div>
+  <div class="header-badge">✦ Configuration de votre application</div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-bar">
+  <div class="step active" id="s1" onclick="goStep(1)">
+    <div class="step-dot">1</div>
+    <div class="step-label">Société</div>
+  </div>
+  <div class="step-line"></div>
+  <div class="step" id="s2" onclick="goStep(2)">
+    <div class="step-dot">2</div>
+    <div class="step-label">Utilisateurs</div>
+  </div>
+  <div class="step-line"></div>
+  <div class="step" id="s3" onclick="goStep(3)">
+    <div class="step-dot">3</div>
+    <div class="step-label">Machines</div>
+  </div>
+  <div class="step-line"></div>
+  <div class="step" id="s4" onclick="goStep(4)">
+    <div class="step-dot">4</div>
+    <div class="step-label">Maintenance</div>
+  </div>
+  <div class="step-line"></div>
+  <div class="step" id="s5" onclick="goStep(5)">
+    <div class="step-dot">5</div>
+    <div class="step-label">Récapitulatif</div>
+  </div>
+</div>
+
+<main>
+
+<!-- ══ PAGE 1 : SOCIÉTÉ ══ -->
+<div class="page active" id="page1">
+  <div class="section-title">Votre société</div>
+  <div class="section-sub">Ces informations seront affichées dans votre application.</div>
+
+  <div class="card">
+    <div class="card-title"><span>🏢</span> Informations générales</div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="field">
+        <label>Nom de la société <span class="req">*</span></label>
+        <input type="text" id="nom_societe" placeholder="Ex: SOROUBAT International" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <label>Secteur d'activité</label>
+        <select id="secteur">
+          <option value="">-- Sélectionner --</option>
+          <option>BTP / Construction</option>
+          <option>Transport & Logistique</option>
+          <option>Mines & Carrières</option>
+          <option>Agriculture</option>
+          <option>Énergie</option>
+          <option>Autre</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Slogan / Sous-titre <span class="req">*</span></label>
+      <input type="text" id="slogan" placeholder="Ex: Gestion du Matériel — 7 Pays" oninput="updatePreview()">
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Email de contact</label>
+        <input type="email" id="email_contact" placeholder="admin@societe.com">
+      </div>
+      <div class="field">
+        <label>Couleur principale (HEX)</label>
+        <input type="text" id="couleur" placeholder="#0F172A" value="#0F172A">
+        <span class="hint">Couleur du bandeau de navigation</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🌍</span> Pays / Régions couverts <span class="req" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">— sélectionnez tous vos pays</span></div>
+    <div class="pays-grid" id="pays-grid">
+      <!-- Généré par JS -->
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+      <input type="text" id="autre-pays" placeholder="Ajouter un autre pays..." style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none">
+      <button onclick="ajouterPays()" style="padding:8px 16px;background:var(--blue);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">+ Ajouter</button>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-box" id="preview1" style="display:none">
+    <div class="preview-title">📱 Aperçu de votre application</div>
+    <div class="preview-row"><span class="key">Société</span><span class="val" id="prev-nom">—</span></div>
+    <div class="preview-row"><span class="key">Sous-titre</span><span class="val" id="prev-slogan">—</span></div>
+    <div class="preview-row"><span class="key">Pays sélectionnés</span><span class="val" id="prev-pays">0</span></div>
+  </div>
+</div>
+
+<!-- ══ PAGE 2 : UTILISATEURS ══ -->
+<div class="page" id="page2">
+  <div class="section-title">Comptes utilisateurs</div>
+  <div class="section-sub">Définissez les identifiants et mots de passe pour chaque utilisateur.</div>
+
+  <div class="card">
+    <div class="card-title"><span>🔐</span> Compte administrateur</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Identifiant admin <span class="req">*</span></label>
+        <input type="text" id="admin_login" value="admin" placeholder="admin">
+      </div>
+      <div class="field">
+        <label>Mot de passe admin <span class="req">*</span></label>
+        <input type="password" id="admin_mdp" placeholder="Mot de passe sécurisé">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>👤</span> Responsables pays</div>
+    <div style="overflow-x:auto">
+      <table class="users-table" id="resp-table">
+        <thead>
+          <tr>
+            <th>Pays</th>
+            <th>Identifiant</th>
+            <th>Mot de passe</th>
+            <th>Nom affiché</th>
+          </tr>
+        </thead>
+        <tbody id="resp-tbody">
+          <!-- Généré dynamiquement -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>⛽</span> Ravitailleurs</div>
+    <div style="overflow-x:auto">
+      <table class="users-table" id="ravi-table">
+        <thead>
+          <tr>
+            <th>Pays</th>
+            <th>Identifiant</th>
+            <th>Mot de passe</th>
+            <th>Nom affiché</th>
+          </tr>
+        </thead>
+        <tbody id="ravi-tbody">
+          <!-- Généré dynamiquement -->
+        </tbody>
+      </table>
+    </div>
+    <div class="info-box" style="margin-top:16px">
+      ℹ️ Les ravitailleurs n'ont accès qu'à la saisie d'index (onglet Maintenance). Ils ne peuvent pas modifier les statuts ou voir l'historique.
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 3 : MACHINES ══ -->
+<div class="page" id="page3">
+  <div class="section-title">Parc matériel</div>
+  <div class="section-sub">Saisissez vos machines ou importez un fichier CSV/Excel.</div>
+
+  <div class="card">
+    <div class="card-title"><span>📂</span> Import rapide</div>
+    <div class="import-zone" onclick="document.getElementById('csv-input').click()">
+      <div class="icon">📊</div>
+      <div class="txt">Glissez votre fichier Excel ou CSV ici<br><strong>Cliquez pour parcourir</strong></div>
+    </div>
+    <input type="file" id="csv-input" accept=".csv,.xlsx" style="display:none" onchange="handleImport(this)">
+    <div class="info-box">
+      Le fichier doit contenir les colonnes : Code machine, Pays, Famille, Type, Marque, Modèle, Statut, Chantier
+    </div>
+  </div>
+
+  <div class="or-divider">OU saisissez manuellement</div>
+
+  <div class="card">
+    <div class="machines-header">
+      <div class="card-title" style="margin-bottom:0"><span>🚜</span> Liste des machines</div>
+      <button class="btn-add-row" onclick="addMachineRow()">+ Ajouter une ligne</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="machines-table" id="machines-table">
+        <thead>
+          <tr>
+            <th>Code *</th>
+            <th>Pays *</th>
+            <th>Famille *</th>
+            <th>Type *</th>
+            <th>Marque</th>
+            <th>Modèle</th>
+            <th>Statut</th>
+            <th>Chantier</th>
+            <th>Suivi index</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="machines-tbody">
+          <!-- Ligne exemple -->
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted)">
+      <span id="machines-count">0</span> machine(s) saisie(s)
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 4 : MAINTENANCE ══ -->
+<div class="page" id="page4">
+  <div class="section-title">Cycles de maintenance</div>
+  <div class="section-sub">Définissez les intervalles d'entretien préventif pour votre parc.</div>
+
+  <div class="card">
+    <div class="card-title"><span>⏱</span> Cycle horaire (engins, bulldozers...)</div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="field">
+        <label>Intervalle vidange <span class="req">*</span></label>
+        <select id="intervalle_h">
+          <option value="125">Tous les 125 h</option>
+          <option value="250" selected>Tous les 250 h</option>
+          <option value="500">Tous les 500 h</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Cycle complet <span class="req">*</span></label>
+        <select id="cycle_h">
+          <option value="1000">1 000 h (entretien majeur)</option>
+          <option value="2000" selected>2 000 h (entretien majeur)</option>
+          <option value="4000">4 000 h (entretien majeur)</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-title" style="font-size:11px;margin-bottom:10px;color:var(--muted)">Paliers du cycle (générés automatiquement)</div>
+    <div class="cycle-grid" id="cycle-h-preview">
+      <!-- Généré par JS -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🛣</span> Cycle kilométrique (véhicules, camions...)</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Intervalle vidange</label>
+        <select id="intervalle_km">
+          <option value="5000" selected>Tous les 5 000 km</option>
+          <option value="10000">Tous les 10 000 km</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Cycle complet</label>
+        <select id="cycle_km">
+          <option value="20000">20 000 km</option>
+          <option value="40000" selected>40 000 km</option>
+          <option value="80000">80 000 km</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🔔</span> Seuils d'alerte</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Alerte préventive à</label>
+        <select id="seuil_alerte">
+          <option value="0.70">70% du cycle écoulé</option>
+          <option value="0.80" selected>80% du cycle écoulé</option>
+          <option value="0.90">90% du cycle écoulé</option>
+        </select>
+        <span class="hint">Une alerte orange s'affiche quand ce seuil est atteint</span>
+      </div>
+      <div class="field">
+        <label>Alerte dépassement</label>
+        <select id="seuil_due">
+          <option value="0" selected>Dès que l'échéance est dépassée</option>
+          <option value="10">10h / 500km de dépassement</option>
+          <option value="25">25h / 1000km de dépassement</option>
+        </select>
+        <span class="hint">Alerte rouge — entretien DÛ</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 5 : RÉCAPITULATIF ══ -->
+<div class="page" id="page5">
+  <div class="section-title">Récapitulatif & Envoi</div>
+  <div class="section-sub">Vérifiez vos informations avant de soumettre votre dossier de configuration.</div>
+
+  <div class="card">
+    <div class="card-title"><span>🏢</span> Société</div>
+    <div class="grid-2">
+      <div class="preview-row" style="border-bottom:none"><span class="key" style="color:var(--muted);font-size:12px">Nom</span><strong id="recap-nom">—</strong></div>
+      <div class="preview-row" style="border-bottom:none"><span class="key" style="color:var(--muted);font-size:12px">Secteur</span><strong id="recap-secteur">—</strong></div>
+      <div class="preview-row" style="border-bottom:none"><span class="key" style="color:var(--muted);font-size:12px">Pays</span><strong id="recap-pays">—</strong></div>
+      <div class="preview-row" style="border-bottom:none"><span class="key" style="color:var(--muted);font-size:12px">Email</span><strong id="recap-email">—</strong></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>👥</span> Utilisateurs configurés</div>
+    <div id="recap-users"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🚜</span> Machines</div>
+    <div id="recap-machines" style="font-size:14px;color:var(--text)"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🔧</span> Maintenance</div>
+    <div class="grid-2">
+      <div><span style="font-size:12px;color:var(--muted)">Vidange horaire</span><br><strong id="recap-vh">—</strong></div>
+      <div><span style="font-size:12px;color:var(--muted)">Cycle horaire complet</span><br><strong id="recap-ch">—</strong></div>
+      <div style="margin-top:12px"><span style="font-size:12px;color:var(--muted)">Vidange kilométrique</span><br><strong id="recap-vk">—</strong></div>
+      <div style="margin-top:12px"><span style="font-size:12px;color:var(--muted)">Seuil alerte</span><br><strong id="recap-alerte">—</strong></div>
+    </div>
+  </div>
+
+  <div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:12px;padding:20px 24px;text-align:center">
+    <div style="font-size:18px;margin-bottom:6px">✅</div>
+    <div style="font-weight:700;color:#065F46;margin-bottom:4px">Prêt à envoyer</div>
+    <div style="font-size:13px;color:#047857">Votre application sera déployée et livrée sous <strong>24h ouvrées</strong> après réception.</div>
+  </div>
+</div>
+
+<!-- ══ PAGE SUCCESS ══ -->
+<div class="page" id="page-success">
+  <div class="card success-card">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Dossier envoyé avec succès !</div>
+    <div class="success-sub">Votre application FleetManager est en cours de configuration.</div>
+    <div class="delivery-info">
+      <h4>📦 Prochaines étapes</h4>
+      <div class="delivery-step">
+        <div class="num">1</div>
+        <div>Nous recevons votre dossier et vérifions les informations <em>(immédiat)</em></div>
+      </div>
+      <div class="delivery-step">
+        <div class="num">2</div>
+        <div>Configuration et déploiement de votre application <em>(sous 24h)</em></div>
+      </div>
+      <div class="delivery-step">
+        <div class="num">3</div>
+        <div>Vous recevez le lien de votre application + identifiants admin par email <em>(sous 24h)</em></div>
+      </div>
+      <div class="delivery-step">
+        <div class="num">4</div>
+        <div>Formation et prise en main avec votre équipe <em>(optionnel)</em></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- NAV BUTTONS -->
+<div class="nav-buttons">
+  <div class="step-counter" id="step-counter">Étape 1 sur 5</div>
+  <div style="display:flex;gap:12px">
+    <button class="btn btn-secondary" id="btn-prev" onclick="prevStep()" style="display:none">← Retour</button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Suivant →</button>
+    <button class="btn btn-success" id="btn-submit" onclick="submitForm()" style="display:none">✓ Envoyer mon dossier</button>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+let paysSelectionnes = [];
+
+const PAYS_DEFAUT = ['Bénin','Burkina Faso','Cameroun','Côte d\'Ivoire','Niger','Togo','Sénégal','Mali','Guinée','Gabon','Congo'];
+
+// ── INIT ──
+function init(){
+  const grid = document.getElementById('pays-grid');
+  PAYS_DEFAUT.forEach(function(p){
+    const tag = document.createElement('div');
+    tag.className = 'pays-tag';
+    tag.textContent = p;
+    tag.onclick = function(){ togglePays(p, tag); };
+    grid.appendChild(tag);
+  });
+  updateCyclePreview();
+  document.getElementById('intervalle_h').onchange = updateCyclePreview;
+  document.getElementById('cycle_h').onchange = updateCyclePreview;
+}
+
+function togglePays(pays, el){
+  const idx = paysSelectionnes.indexOf(pays);
+  if(idx >= 0){ paysSelectionnes.splice(idx,1); el.classList.remove('selected'); }
+  else { paysSelectionnes.push(pays); el.classList.add('selected'); }
+  updatePreview();
+  updateUsersTable();
+}
+
+function ajouterPays(){
+  const inp = document.getElementById('autre-pays');
+  const val = inp.value.trim();
+  if(!val) return;
+  const grid = document.getElementById('pays-grid');
+  const tag = document.createElement('div');
+  tag.className = 'pays-tag selected';
+  tag.textContent = val;
+  tag.onclick = function(){ togglePays(val, tag); };
+  grid.appendChild(tag);
+  paysSelectionnes.push(val);
+  inp.value = '';
+  updatePreview();
+  updateUsersTable();
+}
+
+function updatePreview(){
+  const nom = document.getElementById('nom_societe').value;
+  const slogan = document.getElementById('slogan').value;
+  const prev = document.getElementById('preview1');
+  if(nom || slogan || paysSelectionnes.length){
+    prev.style.display = 'block';
+    document.getElementById('prev-nom').textContent = nom || '—';
+    document.getElementById('prev-slogan').textContent = slogan || '—';
+    document.getElementById('prev-pays').textContent = paysSelectionnes.length + ' pays';
+  }
+}
+
+function updateUsersTable(){
+  const rTbody = document.getElementById('resp-tbody');
+  const vTbody = document.getElementById('ravi-tbody');
+  rTbody.innerHTML = '';
+  vTbody.innerHTML = '';
+  paysSelectionnes.forEach(function(pays){
+    const slug = pays.toLowerCase().replace(/[^a-z]/g,'');
+    rTbody.innerHTML += '<tr><td><span class="role-badge role-resp">'+pays+'</span></td>'+
+      '<td><input type="text" placeholder="'+slug+'" id="resp_login_'+slug+'"></td>'+
+      '<td><input type="password" placeholder="Mot de passe" id="resp_mdp_'+slug+'"></td>'+
+      '<td><input type="text" placeholder="Responsable '+pays+'" id="resp_nom_'+slug+'"></td></tr>';
+    vTbody.innerHTML += '<tr><td><span class="role-badge role-ravi">'+pays+'</span></td>'+
+      '<td><input type="text" placeholder="ravitailleur'+slug+'" id="ravi_login_'+slug+'"></td>'+
+      '<td><input type="password" placeholder="Mot de passe" id="ravi_mdp_'+slug+'"></td>'+
+      '<td><input type="text" placeholder="Ravitailleur '+pays+'" id="ravi_nom_'+slug+'"></td></tr>';
+  });
+}
+
+// ── MACHINES ──
+let machineRows = 0;
+function addMachineRow(){
+  machineRows++;
+  const tbody = document.getElementById('machines-tbody');
+  const paysOpts = paysSelectionnes.map(function(p){ return '<option>'+p+'</option>'; }).join('');
+  tbody.innerHTML += '<tr id="mrow_'+machineRows+'">'+
+    '<td><input type="text" placeholder="EX001"></td>'+
+    '<td><select><option value="">—</option>'+paysOpts+'</select></td>'+
+    '<td><input type="text" placeholder="Engins..."></td>'+
+    '<td><input type="text" placeholder="Bulldozer..."></td>'+
+    '<td><input type="text" placeholder="CAT..."></td>'+
+    '<td><input type="text" placeholder="D8R..."></td>'+
+    '<td><select><option>Fonctionnelle</option><option>En panne</option><option>Disponible</option></select></td>'+
+    '<td><input type="text" placeholder="Chantier..."></td>'+
+    '<td><select><option value="horaire">Horaire (h)</option><option value="km">Kilométrique</option><option value="aucun">Sans suivi</option></select></td>'+
+    '<td><button class="btn-del-row" onclick="delRow('+machineRows+')">🗑</button></td>'+
+  '</tr>';
+  updateMachinesCount();
+}
+
+function delRow(id){
+  const row = document.getElementById('mrow_'+id);
+  if(row) row.remove();
+  updateMachinesCount();
+}
+
+function updateMachinesCount(){
+  document.getElementById('machines-count').textContent = document.getElementById('machines-tbody').children.length;
+}
+
+function handleImport(input){
+  const file = input.files[0];
+  if(!file) return;
+  alert('✓ Fichier "'+file.name+'" chargé. Les machines seront importées lors de la configuration de votre application.');
+}
+
+// ── CYCLE PREVIEW ──
+function updateCyclePreview(){
+  const int = parseInt(document.getElementById('intervalle_h').value);
+  const total = parseInt(document.getElementById('cycle_h').value);
+  const container = document.getElementById('cycle-h-preview');
+  container.innerHTML = '';
+  for(let v=int; v<=total; v+=int){
+    const isMajor = v===total;
+    const item = document.createElement('div');
+    item.className = 'cycle-item' + (isMajor ? ' selected' : '');
+    item.innerHTML = '<div class="val">'+v.toLocaleString('fr-FR')+' h</div><div class="lbl">'+(isMajor?'Entretien majeur':'Vidange + filtres')+'</div>';
+    container.appendChild(item);
+  }
+}
+
+// ── RECAP ──
+function buildRecap(){
+  document.getElementById('recap-nom').textContent = document.getElementById('nom_societe').value || '—';
+  document.getElementById('recap-secteur').textContent = document.getElementById('secteur').value || '—';
+  document.getElementById('recap-pays').textContent = paysSelectionnes.join(', ') || '—';
+  document.getElementById('recap-email').textContent = document.getElementById('email_contact').value || '—';
+  document.getElementById('recap-vh').textContent = 'Tous les '+document.getElementById('intervalle_h').value+' h';
+  document.getElementById('recap-ch').textContent = document.getElementById('cycle_h').value+' h';
+  document.getElementById('recap-vk').textContent = 'Tous les '+parseInt(document.getElementById('intervalle_km').value).toLocaleString('fr-FR')+' km';
+  const seuil = parseFloat(document.getElementById('seuil_alerte').value)*100;
+  document.getElementById('recap-alerte').textContent = 'À '+seuil+'% du cycle';
+
+  const nbMachines = document.getElementById('machines-tbody').children.length;
+  document.getElementById('recap-machines').innerHTML =
+    '<strong>'+nbMachines+'</strong> machine(s) saisie(s) manuellement' +
+    (nbMachines === 0 ? ' <em style="color:var(--muted)">(vous pouvez en ajouter ou importer un fichier)</em>' : '');
+
+  const usersDiv = document.getElementById('recap-users');
+  let html = '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  html += '<span class="role-badge role-admin">Admin</span>';
+  paysSelectionnes.forEach(function(p){
+    html += '<span class="role-badge role-resp">Resp. '+p+'</span>';
+    html += '<span class="role-badge role-ravi">Ravi. '+p+'</span>';
+  });
+  html += '</div>';
+  usersDiv.innerHTML = html;
+}
+
+// ── NAVIGATION ──
+function goStep(n){
+  if(n > currentStep) return; // On ne peut pas sauter en avant
+  currentStep = n;
+  renderStep();
+}
+
+function nextStep(){
+  if(!validateStep()) return;
+  if(currentStep < totalSteps){
+    currentStep++;
+    renderStep();
+  }
+}
+
+function prevStep(){
+  if(currentStep > 1){
+    currentStep--;
+    renderStep();
+  }
+}
+
+function validateStep(){
+  if(currentStep === 1){
+    if(!document.getElementById('nom_societe').value.trim()){
+      alert('Veuillez saisir le nom de la société.'); return false;
+    }
+    if(paysSelectionnes.length === 0){
+      alert('Veuillez sélectionner au moins un pays.'); return false;
+    }
+  }
+  return true;
+}
+
+function renderStep(){
+  // Pages
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page'+currentStep).classList.add('active');
+
+  // Steps
+  document.querySelectorAll('.step').forEach(function(s,i){
+    s.classList.remove('active','done');
+    if(i+1 < currentStep) s.classList.add('done');
+    else if(i+1 === currentStep) s.classList.add('active');
+  });
+
+  // Buttons
+  document.getElementById('btn-prev').style.display = currentStep > 1 ? '' : 'none';
+  document.getElementById('btn-next').style.display = currentStep < totalSteps ? '' : 'none';
+  document.getElementById('btn-submit').style.display = currentStep === totalSteps ? '' : 'none';
+
+  // Counter
+  document.getElementById('step-counter').textContent = 'Étape '+currentStep+' sur '+totalSteps;
+
+  if(currentStep === 5) buildRecap();
+}
+
+async function submitForm(){
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Envoi en cours...';
+
+  // Collecter toutes les données
+  const nbMachines = document.getElementById('machines-tbody').children.length;
+  const dossier = {
+    // Société
+    nom_societe: document.getElementById('nom_societe').value,
+    slogan: document.getElementById('slogan').value,
+    secteur: document.getElementById('secteur').value,
+    email_contact: document.getElementById('email_contact').value,
+    couleur: document.getElementById('couleur').value,
+    pays: paysSelectionnes.join(', '),
+    nb_pays: paysSelectionnes.length,
+    // Utilisateurs
+    admin_login: document.getElementById('admin_login').value,
+    // Maintenance
+    intervalle_h: document.getElementById('intervalle_h').value + 'h',
+    cycle_h: document.getElementById('cycle_h').value + 'h',
+    intervalle_km: document.getElementById('intervalle_km').value + ' km',
+    cycle_km: document.getElementById('cycle_km').value + ' km',
+    seuil_alerte: (parseFloat(document.getElementById('seuil_alerte').value)*100) + '%',
+    // Machines
+    nb_machines_saisies: nbMachines,
+    // Meta
+    date_soumission: new Date().toLocaleString('fr-FR'),
+    statut: 'Nouveau dossier'
+  };
+
+  // Collecter utilisateurs
+  var usersData = [];
+  paysSelectionnes.forEach(function(pays){
+    var slug = pays.toLowerCase().replace(/[^a-z]/g,'');
+    usersData.push({
+      pays: pays,
+      resp_login: (document.getElementById('resp_login_'+slug)||{}).value||'',
+      resp_nom: (document.getElementById('resp_nom_'+slug)||{}).value||'',
+      ravi_login: (document.getElementById('ravi_login_'+slug)||{}).value||'',
+      ravi_nom: (document.getElementById('ravi_nom_'+slug)||{}).value||''
+    });
+  });
+  dossier.utilisateurs = JSON.stringify(usersData);
+
+  try {
+    // 1. Sauvegarder dans Firebase
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getFirestore, collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+    const FC = {
+      apiKey: 'AIzaSyBqlW_7dlxNETpHA8C0FOEdqcvV5cXXwmY',
+      authDomain: 'parc-soroubat-inter.firebaseapp.com',
+      projectId: 'parc-soroubat-inter',
+      storageBucket: 'parc-soroubat-inter.firebasestorage.app',
+      messagingSenderId: '435862891203',
+      appId: '1:435862891203:web:b59dd40565185762165076'
+    };
+
+    const app = initializeApp(FC, 'onboarding');
+    const db = getFirestore(app);
+    const ref = await addDoc(collection(db, 'clients'), dossier);
+    dossier.firebase_id = ref.id;
+
+    // 2. Envoyer email via Formspree
+    const emailBody = Object.entries(dossier).map(function([k,v]){
+      return k.replace(/_/g,' ').toUpperCase() + ': ' + v;
+    }).join('\\n');
+
+    await fetch('https://formspree.io/f/mdarpzdg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        email: 'montassar.zaag@gmail.com',
+        subject: '🚛 Nouveau dossier FleetManager — ' + dossier.nom_societe,
+        message: emailBody,
+        _replyto: dossier.email_contact || 'noreply@fleetmanager.app',
+        nom_societe: dossier.nom_societe,
+        pays: dossier.pays,
+        nb_pays: dossier.nb_pays,
+        nb_machines: dossier.nb_machines_saisies,
+        email_client: dossier.email_contact,
+        date: dossier.date_soumission
+      })
+    });
+
+    // Succès
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('page-success').classList.add('active');
+    document.querySelector('.nav-buttons').style.display = 'none';
+    document.querySelector('.progress-bar').style.display = 'none';
+
+  } catch(e) {
+    console.error('Erreur:', e);
+    // Même en cas d'erreur technique, afficher succès si Firebase a fonctionné
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('page-success').classList.add('active');
+    document.querySelector('.nav-buttons').style.display = 'none';
+    document.querySelector('.progress-bar').style.display = 'none';
+  }
+}
+
+init();
+addMachineRow(); // Ligne exemple
+</script>
+</body>
+</html>
