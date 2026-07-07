@@ -1914,7 +1914,12 @@ function renderMobileVehicles() {
         <div>
           <div class="m-vcard-name">${v.marque||''} ${v.modele||''}</div>
           <div class="m-vcard-plate">${v.immat||'—'}</div>
-          ${v.owner?`<div style="font-size:12px;color:var(--text2);margin-top:2px">👤 ${v.owner}</div>`:''}
+          ${(()=>{
+            const names = Array.isArray(v.ownerIds) && v.ownerIds.length > 0
+              ? v.ownerIds.map(uid => { const u = allUsers.find(x=>x.id===uid); return u ? (u.prenom+' '+u.nom).trim() : null; }).filter(Boolean).join(', ')
+              : (v.owner||'');
+            return names ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">👤 ${names}</div>` : '';
+          })()}
         </div>
         <div class="m-vcard-status">
           <div class="m-status-pill ${s}"><span class="m-status-dot"></span>${statusLabel(s)}</div>
