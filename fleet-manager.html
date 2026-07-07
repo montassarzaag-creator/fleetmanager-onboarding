@@ -880,13 +880,12 @@ function startListeners() {
     if (document.getElementById('page-history').classList.contains('active')) renderHistory();
   });
 
-  // Utilisateurs (admin groupe + admin société, nécessaire pour l'attribution de véhicules)
-  if (isAdminOrSoc()) {
-    onSnapshot(collection(db,'utilisateurs'), snap => {
+  // Utilisateurs — chargé pour tous les rôles (nécessaire pour afficher les noms des propriétaires)
+  onSnapshot(collection(db,'utilisateurs'), snap => {
       allUsers = snap.docs.map(d => ({id:d.id,...d.data()}));
       if (document.getElementById('page-users').classList.contains('active')) renderUsers();
+      renderMobile(); // Mettre à jour l'affichage mobile avec les noms
     });
-  }
 }
 
 function filteredVehicles() {
