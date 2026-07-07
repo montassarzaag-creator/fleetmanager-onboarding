@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetManager — Gestion Parc Automobile</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#185FA5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FleetManager">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-lt:#E6F1FB;--green:#3B6D11;--green-lt:#EAF3DE;--orange:#854F0B;--orange-lt:#FAEEDA;--red:#A32D2D;--red-lt:#FCEBEB;--gray:#444441;--gray-lt:#F1EFE8;--border:#e0dfd8;--surface:#f8f7f4;--white:#ffffff;--text:#1a1a18;--text2:#52514e;--nav-w:220px}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--surface);color:var(--text);font-size:14px}
+/* AUTH */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0F1F3D 0%,#185FA5 100%)}
+.auth-box{background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;justify-content:center}
+.auth-logo-icon{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px}
+.auth-title{font-size:20px;font-weight:600;color:#0F1F3D}
+.auth-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:24px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff;color:var(--text);outline:none;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue)}
+.btn-primary{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.btn-primary:hover{opacity:.9}
+.auth-error{color:var(--red);font-size:12px;text-align:center;margin-top:8px;min-height:18px}
+/* APP */
+#app{display:none;height:100vh;overflow:hidden;flex-direction:row}
+#app.visible{display:flex}
+.sidebar{width:var(--nav-w);background:#0F1F3D;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.logo{padding:16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px}
+.logo-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.logo-text{font-size:15px;font-weight:600;color:#fff}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.5)}
+nav{padding:8px;flex:1}
+.nav-section{font-size:10px;font-weight:500;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;padding:12px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.65);font-size:13px;transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--blue);color:#fff}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.user-info{padding:12px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;flex-shrink:0}
+.user-name{font-size:12px;color:#fff;font-weight:500}
+.user-role{font-size:10px;color:rgba(255,255,255,.5)}
+.logout-btn{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:16px;padding:4px}
+.logout-btn:hover{color:#fff}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{height:52px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.page-title{font-size:15px;font-weight:600;flex:1}
+.company-filter{font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
+.header-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;background:#fff;color:var(--text);transition:background .15s}
+.header-btn:hover{background:var(--surface)}
+.content{flex:1;overflow-y:auto;padding:20px}
+/* SECTIONS */
+.section{display:none}
+.section.active{display:block}
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:10px;padding:14px;border:1px solid var(--border)}
+.kpi-label{font-size:11px;color:var(--text2);margin-bottom:6px}
+.kpi-value{font-size:24px;font-weight:600}
+.kpi-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.kpi.ok .kpi-value{color:var(--green)}
+.kpi.warn .kpi-value{color:var(--orange)}
+.kpi.danger .kpi-value{color:var(--red)}
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface)}
+/* STATUS */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;white-space:nowrap}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.green{background:var(--green-lt);color:var(--green)}
+.badge.orange{background:var(--orange-lt);color:var(--orange)}
+.badge.red{background:var(--red-lt);color:var(--red)}
+.badge.gray{background:var(--gray-lt);color:var(--gray)}
+.badge.blue{background:var(--blue-lt);color:var(--blue)}
+/* PROGRESS */
+.prog-bar{height:6px;background:var(--surface);border-radius:3px;overflow:hidden;min-width:80px}
+.prog-fill{height:100%;border-radius:3px}
+.prog-fill.green{background:#63991a}
+.prog-fill.orange{background:#ef9f27}
+.prog-fill.red{background:#e24b4a}
+/* SEARCH ROW */
+.search-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.search-row input{flex:1;min-width:180px;font-size:13px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;background:#fff;color:var(--text);transition:background .15s;white-space:nowrap}
+.btn:hover{background:var(--surface)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{opacity:.9}
+.btn.danger{background:var(--red-lt);color:var(--red);border-color:var(--red)}
+.btn.sm{padding:4px 10px;font-size:12px}
+/* ALERTS */
+.alert-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;margin-bottom:8px;font-size:13px}
+.alert-row.red{background:var(--red-lt);border-left:3px solid var(--red)}
+.alert-row.orange{background:var(--orange-lt);border-left:3px solid var(--orange)}
+.alert-row.blue{background:var(--blue-lt);border-left:3px solid var(--blue)}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-title{font-weight:600;color:var(--text)}
+.alert-desc{color:var(--text2);font-size:12px;margin-top:2px}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-hdr h3{font-size:16px;font-weight:600}
+.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.form-group.full{grid-column:1/-1}
+.form-actions{display:flex;gap:8px;justify-content:flex-end}
+/* HISTORY */
+.hist-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.hist-item:last-child{border-bottom:none}
+.hist-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);margin-top:5px;flex-shrink:0}
+.hist-info{flex:1;font-size:13px}
+.hist-date{font-size:11px;color:var(--text2);margin-top:2px}
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--text2);font-size:13px}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* EMPTY */
+.empty{text-align:center;padding:48px;color:var(--text2)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:#1a1a18;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;z-index:9999;display:none;max-width:320px}
+#toast.show{display:block;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* BANDEAU ALERTES */
+#alert-banner{background:var(--red-lt);border-bottom:1px solid #f0c0c0;padding:8px 20px;font-size:12px;color:var(--red);display:none;flex-wrap:wrap;gap:8px;align-items:center}
+#alert-banner.show{display:flex}
+/* KM INPUT */
+.km-group{display:flex;gap:8px;align-items:flex-end;padding:12px;background:var(--surface);border-radius:8px;margin-top:10px}
+.km-group input{flex:1;font-size:16px;font-weight:500;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:#fff}
+
+/* ================= MOBILE VIEW (≤768px) ================= */
+#mobile-view{display:none}
+@media(max-width:768px){
+  #app.visible{display:none !important}
+  #mobile-view{display:flex;flex-direction:column;height:100vh;background:var(--surface)}
+}
+.m-header{background:#0F1F3D;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:50}
+.m-header-logo{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.m-header-title{font-size:15px;font-weight:600;flex:1}
+.m-header-name{font-size:11px;color:rgba(255,255,255,.6)}
+.m-logout{background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;padding:6px}
+.m-logout:hover{color:#fff}
+@keyframes spin-once{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spinning{animation:spin-once .6s ease;display:inline-block}
+.m-content{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px;-webkit-overflow-scrolling:touch}
+.m-banner{background:var(--red-lt);color:var(--red);padding:10px 14px;font-size:12px;font-weight:500;display:none}
+.m-banner.show{display:block}
+.m-tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
+.m-tab{flex:1;text-align:center;padding:11px 4px;font-size:12px;color:var(--text2);border-bottom:2px solid transparent;font-weight:500}
+.m-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.m-tab-icon{font-size:18px;display:block;margin-bottom:2px}
+.m-section{display:none}
+.m-section.active{display:block}
+/* Carte véhicule mobile */
+.m-vcard{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.m-vcard-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.m-vcard-icon{width:48px;height:48px;border-radius:12px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.m-vcard-name{font-size:17px;font-weight:700;color:var(--text)}
+.m-vcard-plate{font-size:13px;color:var(--text2);font-family:monospace;margin-top:1px}
+.m-vcard-status{margin-left:auto}
+.m-status-pill{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px}
+.m-status-pill.green{background:var(--green-lt);color:var(--green)}
+.m-status-pill.orange{background:var(--orange-lt);color:var(--orange)}
+.m-status-pill.red{background:var(--red-lt);color:var(--red)}
+.m-status-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.m-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.m-info-box{background:var(--surface);border-radius:10px;padding:10px 12px}
+.m-info-label{font-size:11px;color:var(--text2);margin-bottom:3px}
+.m-info-value{font-size:15px;font-weight:600;color:var(--text)}
+.m-prog-wrap{margin-bottom:6px}
+.m-prog-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px}
+.m-prog-bar{height:10px;background:var(--surface);border-radius:6px;overflow:hidden}
+.m-prog-fill{height:100%;border-radius:6px;transition:width .4s}
+.m-prog-fill.green{background:linear-gradient(90deg,#7ab82e,#63991a)}
+.m-prog-fill.orange{background:linear-gradient(90deg,#f5b042,#ef9f27)}
+.m-prog-fill.red{background:linear-gradient(90deg,#ea5d5c,#e24b4a)}
+.m-prog-sub{font-size:11px;color:var(--text2);margin-top:4px;text-align:right}
+/* Bouton saisie km flottant */
+.m-km-btn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:600;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+.m-km-btn:active{opacity:.85}
+/* Empty state mobile */
+.m-empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.m-empty-icon{font-size:48px;margin-bottom:14px}
+/* Alertes mobile */
+.m-alert{display:flex;gap:10px;background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;border-left:4px solid}
+.m-alert.red{border-color:var(--red)}
+.m-alert.orange{border-color:var(--orange)}
+.m-alert-icon{font-size:18px;flex-shrink:0}
+.m-alert-title{font-size:13px;font-weight:600;color:var(--text)}
+.m-alert-desc{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.4}
+/* Historique mobile */
+.m-hist-item{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.m-hist-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);margin-top:5px;flex-shrink:0}
+.m-hist-text{font-size:13px;color:var(--text)}
+.m-hist-date{font-size:11px;color:var(--text2);margin-top:2px}
+/* Modal saisie km mobile (bottom sheet) */
+.m-sheet-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000}
+.m-sheet-bg.open{display:block}
+.m-sheet{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:20px;z-index:1001;transform:translateY(100%);transition:transform .25s ease}
+.m-sheet-bg.open .m-sheet{transform:translateY(0)}
+.m-sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.m-sheet-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.m-sheet-sub{font-size:13px;color:var(--text2);margin-bottom:16px}
+.m-sheet-input{width:100%;font-size:22px;font-weight:700;padding:14px;border:2px solid var(--border);border-radius:12px;text-align:center;margin-bottom:6px}
+.m-sheet-input:focus{border-color:var(--blue);outline:none}
+.m-sheet-hint{font-size:12px;color:var(--text2);text-align:center;margin-bottom:18px}
+.m-sheet-actions{display:flex;gap:10px}
+.m-sheet-btn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:600;border:none}
+.m-sheet-cancel{background:var(--surface);color:var(--text)}
+.m-sheet-confirm{background:var(--blue);color:#fff}
+/* RESPONSIVE old fallback */
+@media(max-width:768px){
+  .grid-2{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🚗</div>
+      <div>
+        <div style="font-size:18px;font-weight:700;color:#0F1F3D">FleetManager</div>
+        <div style="font-size:11px;color:#888">Gestion Parc Automobile</div>
+      </div>
+    </div>
+    <div class="auth-sub">Connectez-vous pour accéder à votre parc</div>
+    <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="votre@email.com"></div>
+    <div class="form-group"><label>Mot de passe</label><input type="password" id="login-password" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="doLogin()">Se connecter</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🚗</div>
+      <div>
+        <div class="logo-text">FleetManager</div>
+        <div class="logo-sub">Groupe Multi-Société</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">Vue générale</div>
+      <div class="nav-item active" data-page="dashboard">📊 <span>Tableau de bord</span></div>
+      <div class="nav-item" data-page="alerts">🔔 <span>Alertes</span> <span class="nav-badge" id="badge-alerts">0</span></div>
+      <div class="nav-section">Parc</div>
+      <div class="nav-item" data-page="vehicles">🚗 <span>Véhicules</span></div>
+      <div class="nav-item staff-only" data-page="maintenance">🔧 <span>Entretiens</span></div>
+      <div class="nav-item staff-only" data-page="documents">📄 <span>Documents</span></div>
+      <div class="nav-section staff-only">Analyse</div>
+      <div class="nav-item staff-only" data-page="history">📋 <span>Historique</span></div>
+      <div class="nav-section admin-only">Administration</div>
+      <div class="nav-item admin-only" data-page="users">👥 <span>Utilisateurs</span></div>
+      <div class="nav-item admin-only" data-page="settings">⚙️ <span>Paramètres</span></div>
+    </nav>
+    <div class="user-info">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div>
+        <div class="user-name" id="user-name">Chargement…</div>
+        <div class="user-role" id="user-role"></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Déconnexion">↩</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div id="alert-banner"></div>
+    <div class="header">
+      <div class="page-title" id="page-title">Tableau de bord</div>
+      <select class="company-filter" id="company-filter" onchange="onCompanyFilter()">
+        <option value="">Toutes les sociétés</option>
+      </select>
+      <button class="header-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="content" id="content">
+
+      <!-- DASHBOARD -->
+      <div class="section active" id="page-dashboard">
+        <div class="kpi-row" id="kpi-row">
+          <div class="kpi"><div class="kpi-label">Chargement…</div><div class="kpi-value">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Véhicules nécessitant attention</div>
+          <div id="dash-table-wrap"><div class="loading"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="section" id="page-alerts">
+        <div class="card">
+          <div class="card-title">Alertes actives</div>
+          <div id="alerts-list"><div class="loading"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- VEHICLES -->
+      <div class="section" id="page-vehicles">
+        <div class="search-row">
+          <input type="text" id="veh-search" placeholder="Rechercher marque, immat., utilisateur…" oninput="filterVehicles()">
+          <select id="veh-status-filter" onchange="filterVehicles()" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px">
+            <option value="">Tous les états</option>
+            <option value="green">Normal</option>
+            <option value="orange">Proche échéance</option>
+            <option value="red">Dépassé</option>
+          </select>
+          <button class="btn primary admin-only" onclick="openModal('modal-add-veh')">+ Ajouter</button>
+        </div>
+        <div class="card">
+          <div id="veh-table-wrap"><div class="loading"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- MAINTENANCE -->
+      <div class="section" id="page-maintenance">
+        <div class="search-row">
+          <input type="text" id="maint-search" placeholder="Rechercher…" oninput="filterMaint()">
+          <button class="btn primary" onclick="openModal('modal-add-maint')">+ Enregistrer entretien</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Historique des entretiens</div>
+          <div id="maint-table-wrap"><div class="loading"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTS -->
+      <div class="section" id="page-documents">
+        <div class="card">
+          <div class="card-title">Documents administratifs</div>
+          <div id="docs-table-wrap"><div class="loading"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="section" id="page-history">
+        <div class="search-row">
+          <input type="text" id="hist-search" placeholder="Rechercher dans l'historique…" oninput="filterHistory()">
+        </div>
+        <div class="card">
+          <div class="card-title">Journal des actions</div>
+          <div id="hist-list"><div class="loading"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- USERS (admin) -->
+      <div class="section" id="page-users">
+        <div class="search-row">
+          <input type="text" placeholder="Rechercher un utilisateur…">
+          <button class="btn primary" onclick="openModal('modal-add-user')">+ Ajouter utilisateur</button>
+        </div>
+        <div class="card">
+          <div id="users-table-wrap"><div class="loading"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS (admin) -->
+      <div class="section" id="page-settings">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Alertes kilométriques</div>
+            <div class="form-group"><label>Seuil alerte (% du kilom. planifié)</label><input type="number" id="seuil-km" value="80" min="50" max="99"></div>
+            <div class="form-group"><label>Fréquence entretien par défaut (km)</label><input type="number" id="freq-default" value="10000"></div>
+            <button class="btn primary" onclick="saveSettings()">Enregistrer</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Alertes documents</div>
+            <div class="form-group"><label>Première alerte (jours avant expiration)</label><input type="number" id="alert-j1" value="14"></div>
+            <div class="form-group"><label>Deuxième alerte (jours)</label><input type="number" id="alert-j2" value="7"></div>
+            <div class="form-group"><label>Alerte quotidienne à partir de (jours)</label><input type="number" id="alert-j3" value="5"></div>
+            <button class="btn primary" onclick="saveSettings()">Enregistrer</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Sociétés du Groupe</div>
+            <div id="societes-list"></div>
+            <button class="btn primary" style="margin-top:12px" onclick="openModal('modal-add-societe')">+ Ajouter société</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= MOBILE VIEW ================= -->
+<div id="mobile-view">
+  <div class="m-header">
+    <div class="m-header-logo">🚗</div>
+    <div style="flex:1">
+      <div class="m-header-title">FleetManager</div>
+      <div class="m-header-name" id="m-user-name">—</div>
+    </div>
+    <button class="m-logout" onclick="refreshMobile()" title="Rafraîchir" id="refresh-btn" style="font-size:22px;color:#fff;opacity:.9">↻</button>
+    <button class="m-logout" onclick="doLogout()" title="Déconnexion" style="font-size:20px">↩</button>
+  </div>
+  <div class="m-banner" id="m-banner"></div>
+
+  <div class="m-tabs">
+    <div class="m-tab active" data-mtab="m-vehicles"><span class="m-tab-icon">🚗</span>Véhicules</div>
+    <div class="m-tab" data-mtab="m-alerts"><span class="m-tab-icon">🔔</span>Alertes</div>
+    <div class="m-tab" data-mtab="m-history"><span class="m-tab-icon">🔧</span>Entretiens</div>
+  </div>
+
+  <div class="m-content">
+    <div class="m-section active" id="m-vehicles"></div>
+    <div class="m-section" id="m-alerts"></div>
+    <div class="m-section" id="m-history"></div>
+  </div>
+</div>
+
+<!-- Bottom sheet saisie km mobile -->
+<div class="m-sheet-bg" id="m-km-sheet">
+  <div class="m-sheet" onclick="event.stopPropagation()">
+    <div class="m-sheet-handle"></div>
+    <div class="m-sheet-title" id="m-km-title">Mise à jour kilométrage</div>
+    <div class="m-sheet-sub" id="m-km-sub"></div>
+    <input type="number" class="m-sheet-input" id="m-km-input" placeholder="0" inputmode="numeric">
+    <div class="m-sheet-hint" id="m-km-hint"></div>
+    <div class="m-sheet-actions">
+      <button class="m-sheet-btn m-sheet-cancel" onclick="closeMKmSheet()">Annuler</button>
+      <button class="m-sheet-btn m-sheet-confirm" onclick="saveMKm()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- Véhicule -->
+<div class="modal-bg" id="modal-add-veh">
+  <div class="modal">
+    <div class="modal-hdr"><h3 id="veh-modal-title">Ajouter un véhicule</h3><button class="close-btn" onclick="closeModal('modal-add-veh')">×</button></div>
+    <input type="hidden" id="veh-edit-id">
+    <div class="form-grid">
+      <div class="form-group"><label>Société *</label><select id="veh-societe"></select></div>
+      <div class="form-group"><label>Marque *</label><input type="text" id="veh-marque" placeholder="Toyota"></div>
+      <div class="form-group"><label>Modèle *</label><input type="text" id="veh-modele" placeholder="Hilux"></div>
+      <div class="form-group"><label>Immatriculation *</label><input type="text" id="veh-immat" placeholder="AB 1234 CD"></div>
+      <div class="form-group"><label>N° de série (VIN)</label><input type="text" id="veh-vin" placeholder="VF1..."></div>
+      <div class="form-group"><label>Kilométrage actuel *</label><input type="number" id="veh-km" placeholder="45000"></div>
+      <div id="veh-km-warning" style="display:none;font-size:11px;color:var(--orange);padding:6px 8px;background:var(--orange-lt);border-radius:6px;margin-top:-8px;grid-column:1/-1">⚠️ Pour corriger le kilométrage d'un véhicule existant, utilisez le bouton <strong>⚠️</strong> dans la liste des véhicules (avec motif obligatoire).</div>
+      <div class="form-group"><label>Fréquence entretien (km) *</label><input type="number" id="veh-freq" placeholder="10000"></div>
+      <div class="form-group"><label>Dernier entretien (km)</label><input type="number" id="veh-last-km" placeholder="40000"></div>
+      <div class="form-group full">
+        <label>Utilisateur(s) affecté(s) <span style="font-weight:400;color:var(--text2)">— coche un ou plusieurs comptes</span></label>
+        <div id="veh-owners-list" style="border:1px solid var(--border);border-radius:8px;padding:8px;max-height:140px;overflow-y:auto;background:#fff"></div>
+      </div>
+      <div class="form-group"><label>Service</label><input type="text" id="veh-service" placeholder="Commercial"></div>
+      <div class="form-group"><label>Date de mise en circulation</label><input type="date" id="veh-date-circ"></div>
+      <div class="form-group"><label>Expiration assurance</label><input type="date" id="veh-ins-exp"></div>
+      <div class="form-group"><label>Expiration visite technique</label><input type="date" id="veh-vt-exp"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-add-veh')">Annuler</button>
+      <button class="btn primary" onclick="saveVehicle()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Entretien -->
+<div class="modal-bg" id="modal-add-maint">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Enregistrer un entretien</h3><button class="close-btn" onclick="closeModal('modal-add-maint')">×</button></div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Véhicule *</label><select id="maint-veh" onchange="onMaintVehChange()"></select></div>
+      <div class="form-group"><label>Type d'entretien *</label>
+        <select id="maint-type" onchange="onMaintTypeChange()">
+          <optgroup label="🔧 Entretien PRÉVENTIF">
+            <option value="Vidange moteur|preventif">Vidange moteur</option>
+            <option value="Remplacement filtres|preventif">Remplacement filtres</option>
+            <option value="Révision générale|preventif">Révision générale</option>
+            <option value="Pneumatiques|preventif">Pneumatiques</option>
+            <option value="Courroie de distribution|preventif">Courroie de distribution</option>
+            <option value="Freins|preventif">Freins (préventif)</option>
+            <option value="Autre préventif|preventif">Autre préventif</option>
+          </optgroup>
+          <optgroup label="🚨 Intervention CURATIVE">
+            <option value="Réparation mécanique|curatif">Réparation mécanique</option>
+            <option value="Remplacement pièce cassée|curatif">Remplacement pièce cassée</option>
+            <option value="Réparation électrique|curatif">Réparation électrique</option>
+            <option value="Réparation carrosserie|curatif">Réparation carrosserie</option>
+            <option value="Dépannage|curatif">Dépannage</option>
+            <option value="Autre curatif|curatif">Autre curatif</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-group"><label>Date *</label><input type="date" id="maint-date"></div>
+      <div id="maint-type-hint" style="grid-column:1/-1;font-size:12px;padding:6px 8px;border-radius:6px;background:var(--green-lt);color:var(--green)">🔧 Préventif — le compteur d'entretien sera remis à jour</div>
+      <div class="form-group"><label>Kilométrage *</label><input type="number" id="maint-km" placeholder="Km au moment de l'entretien" inputmode="numeric" min="0"></div>
+      <div class="form-group"><label>Prestataire</label><input type="text" id="maint-presta" placeholder="Garage Central"></div>
+      <div class="form-group"><label>Coût (FCFA)</label><input type="number" id="maint-cout" placeholder="150000"></div>
+      <div class="form-group full"><label>Pièces remplacées</label><textarea id="maint-pieces" style="width:100%;min-height:60px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px" placeholder="Filtre à huile, huile 5L…"></textarea></div>
+      <div class="form-group full"><label>Observations</label><textarea id="maint-obs" style="width:100%;min-height:60px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-add-maint')">Annuler</button>
+      <button class="btn primary" onclick="saveMaint()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Saisie KM -->
+<div class="modal-bg" id="modal-km">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-hdr"><h3>Mise à jour kilométrage</h3><button class="close-btn" onclick="closeModal('modal-km')">×</button></div>
+    <div id="km-modal-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+    <div class="form-group"><label>Nouvel index kilométrique *</label><input type="number" id="km-new-val" placeholder=""></div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:14px" id="km-hint"></div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-km')">Annuler</button>
+      <button class="btn primary" onclick="saveKm()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Correction index KM (admin seulement) -->
+<div class="modal-bg" id="modal-km-correction">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hdr">
+      <h3>⚠️ Correction d'index kilométrique</h3>
+      <button class="close-btn" onclick="closeModal('modal-km-correction')">×</button>
+    </div>
+    <div id="km-corr-info" style="font-size:13px;color:var(--text2);margin-bottom:14px;padding:10px;background:var(--orange-lt);border-radius:8px;border-left:3px solid var(--orange)"></div>
+    <div class="form-group">
+      <label>Index corrigé (km) *</label>
+      <input type="number" id="km-corr-val" placeholder="Valeur corrigée">
+    </div>
+    <div class="form-group">
+      <label>Motif de correction *</label>
+      <select id="km-corr-motif">
+        <option value="">— Choisir un motif —</option>
+        <option>Erreur de saisie</option>
+        <option>Compteur remplacé</option>
+        <option>Remise à zéro compteur</option>
+        <option>Correction après vérification physique</option>
+        <option>Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Observations</label>
+      <textarea id="km-corr-obs" style="width:100%;min-height:70px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px" placeholder="Détails de la correction…"></textarea>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;padding:8px;background:var(--surface);border-radius:6px">
+      ⚠️ Cette correction sera enregistrée dans l'historique avec votre nom, la date et le motif. Elle est irréversible.
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-km-correction')">Annuler</button>
+      <button class="btn danger" onclick="saveKmCorrection()">Confirmer la correction</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ajout Utilisateur -->
+<div class="modal-bg" id="modal-add-user">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Ajouter un utilisateur</h3><button class="close-btn" onclick="closeModal('modal-add-user')">×</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Prénom *</label><input type="text" id="user-prenom"></div>
+      <div class="form-group"><label>Nom *</label><input type="text" id="user-nom"></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="user-email"></div>
+      <div class="form-group"><label>Mot de passe *</label><input type="password" id="user-password" placeholder="Min. 6 caractères"></div>
+      <div class="form-group"><label>Société</label><select id="user-societe"></select></div>
+      <div class="form-group"><label>Rôle</label>
+        <select id="new-user-role">
+          <option value="user">Utilisateur standard</option>
+          <option value="admin_societe">Administrateur société</option>
+          <option value="admin">Administrateur groupe</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-add-user')">Annuler</button>
+      <button class="btn primary" onclick="createUser()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Société -->
+<div class="modal-bg" id="modal-add-societe">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-hdr"><h3 id="soc-modal-title">Ajouter une société</h3><button class="close-btn" onclick="closeModal('modal-add-societe')">×</button></div>
+    <input type="hidden" id="soc-edit-id">
+    <div class="form-group"><label>Nom de la société *</label><input type="text" id="soc-nom" placeholder="SARL Transport..."></div>
+    <div class="form-group"><label>Code société *</label><input type="text" id="soc-code" placeholder="TCE" style="text-transform:uppercase"></div>
+    <div class="form-group"><label>Responsable</label><input type="text" id="soc-resp" placeholder="M. Dupont"></div>
+    <div class="form-group"><label>Email contact</label><input type="email" id="soc-email"></div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-add-societe')">Annuler</button>
+      <button class="btn primary" onclick="saveSociete()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modifier entretien -->
+<div class="modal-bg" id="modal-edit-maint">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Modifier l'entretien</h3><button class="close-btn" onclick="closeModal('modal-edit-maint')">×</button></div>
+    <input type="hidden" id="maint-edit-id">
+    <div class="form-grid">
+      <div class="form-group"><label>Type d'entretien</label>
+        <select id="maint-edit-type">
+          <optgroup label="🔧 Entretien PRÉVENTIF">
+            <option value="Vidange moteur|preventif">Vidange moteur</option>
+            <option value="Remplacement filtres|preventif">Remplacement filtres</option>
+            <option value="Révision générale|preventif">Révision générale</option>
+            <option value="Pneumatiques|preventif">Pneumatiques</option>
+            <option value="Courroie de distribution|preventif">Courroie de distribution</option>
+            <option value="Freins|preventif">Freins (préventif)</option>
+            <option value="Autre préventif|preventif">Autre préventif</option>
+          </optgroup>
+          <optgroup label="🚨 Intervention CURATIVE">
+            <option value="Réparation mécanique|curatif">Réparation mécanique</option>
+            <option value="Remplacement pièce cassée|curatif">Remplacement pièce cassée</option>
+            <option value="Réparation électrique|curatif">Réparation électrique</option>
+            <option value="Réparation carrosserie|curatif">Réparation carrosserie</option>
+            <option value="Dépannage|curatif">Dépannage</option>
+            <option value="Autre curatif|curatif">Autre curatif</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="maint-edit-date"></div>
+      <div class="form-group"><label>Kilométrage</label><input type="number" id="maint-edit-km"></div>
+      <div class="form-group"><label>Prestataire</label><input type="text" id="maint-edit-presta"></div>
+      <div class="form-group"><label>Coût (FCFA)</label><input type="number" id="maint-edit-cout"></div>
+      <div class="form-group full"><label>Pièces remplacées</label><textarea id="maint-edit-pieces" style="width:100%;min-height:60px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></textarea></div>
+      <div class="form-group full"><label>Observations</label><textarea id="maint-edit-obs" style="width:100%;min-height:60px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-edit-maint')">Annuler</button>
+      <button class="btn primary" onclick="updateMaint()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Détail véhicule -->
+<div class="modal-bg" id="modal-veh-detail">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-hdr"><h3 id="detail-title">Détail véhicule</h3><button class="close-btn" onclick="closeModal('modal-veh-detail')">×</button></div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCSEadvooWnsbr1QUW5bHJmSnCQD-Pjd-k",
+  authDomain: "parc-voitures.firebaseapp.com",
+  projectId: "parc-voitures",
+  storageBucket: "parc-voitures.firebasestorage.app",
+  messagingSenderId: "790920546565",
+  appId: "1:790920546565:web:58365ef1569366ec99cf6c",
+  measurementId: "G-0VRJMKCT56"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Seconde instance Firebase isolée pour créer des comptes sans déconnecter l'admin
+const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+const secondaryAuth = getAuth(secondaryApp);
+
+// ---- STATE ----
+let currentUser = null;
+let currentUserData = null;
+let allVehicles = [];
+let allMaint = [];
+let allHistory = [];
+let allUsers = [];
+let allSocietes = [];
+let settings = { seuilKm: 80, freqDefault: 10000, alertJ1: 14, alertJ2: 7, alertJ3: 5 };
+let kmModalVeh = null;
+
+// ---- HELPERS ----
+function toast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+function fmt(n) { return n ? Number(n).toLocaleString('fr-FR') : '—'; }
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('fr-FR');
+}
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return Math.ceil((d - now) / 86400000);
+}
+function getKmStatus(v) {
+  const pct = v.freq > 0 ? ((v.km - (v.lastKm||0)) / v.freq) * 100 : 0;
+  if (pct >= 100) return 'red';
+  if (pct >= settings.seuilKm) return 'orange';
+  return 'green';
+}
+function getDocStatus(dateStr) {
+  const j = daysUntil(dateStr);
+  if (j === null) return 'gray';
+  if (j < 0) return 'red';
+  if (j <= 14) return 'orange';
+  return 'green';
+}
+function getVehStatus(v) {
+  // Statut global = le pire des 3 (km, assurance, visite technique) — utilisé pour le dashboard/alertes globales
+  const statuses = [getKmStatus(v), getDocStatus(v.insExp), getDocStatus(v.vtExp)];
+  if (statuses.includes('red')) return 'red';
+  if (statuses.includes('orange')) return 'orange';
+  return 'green';
+}
+function getPct(v) {
+  if (!v.freq) return 0;
+  return Math.min(Math.round(((v.km - (v.lastKm||0)) / v.freq) * 100), 120);
+}
+function statusLabel(s) {
+  return s === 'green' ? 'Normal' : s === 'orange' ? 'Proche' : s === 'red' ? 'Dépassé' : '—';
+}
+function docStatusLabel(s) {
+  return s === 'green' ? 'Valide' : s === 'orange' ? 'Bientôt' : s === 'red' ? 'Expiré' : '—';
+}
+function initials(name) {
+  return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+function isAdmin() { return currentUserData && (currentUserData.role === 'admin'); }
+function isAdminOrSoc() { return currentUserData && ['admin','admin_societe'].includes(currentUserData.role); }
+
+// ---- AUTH ----
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-password').value;
+  const err = document.getElementById('auth-error');
+  err.textContent = '';
+  if (!email || !pw) { err.textContent = 'Email et mot de passe requis.'; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+  } catch(e) {
+    err.textContent = 'Email ou mot de passe incorrect.';
+  }
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    // Charger le profil utilisateur
+    try {
+      const snap = await getDoc(doc(db, 'utilisateurs', user.uid));
+      if (snap.exists()) {
+        currentUserData = snap.data();
+      } else {
+        // Créer profil basique si premier admin
+        currentUserData = { nom: user.email.split('@')[0], prenom: '', role: 'admin', email: user.email };
+        await setDoc(doc(db, 'utilisateurs', user.uid), currentUserData);
+      }
+    } catch(e) {
+      currentUserData = { nom: 'Admin', prenom: '', role: 'admin', email: user.email };
+    }
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    document.getElementById('user-name').textContent = (currentUserData.prenom+' '+currentUserData.nom).trim() || user.email;
+    document.getElementById('user-role').textContent = currentUserData.role === 'admin' ? 'Administrateur groupe' : currentUserData.role === 'admin_societe' ? 'Admin société' : 'Utilisateur';
+    document.getElementById('user-avatar').textContent = initials((currentUserData.prenom+' '+currentUserData.nom).trim() || user.email);
+    const mUserName = document.getElementById('m-user-name');
+    if (mUserName) mUserName.textContent = (currentUserData.prenom+' '+currentUserData.nom).trim() || user.email;
+    applyRoleUI();
+    startListeners();
+  } else {
+    currentUser = null; currentUserData = null;
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').classList.remove('visible');
+  }
+});
+
+function applyRoleUI() {
+  const adminEls = document.querySelectorAll('.admin-only');
+  adminEls.forEach(el => el.style.display = isAdmin() ? '' : 'none');
+  // staff-only : visible pour admin groupe + admin société, caché pour utilisateur standard
+  const staffEls = document.querySelectorAll('.staff-only');
+  staffEls.forEach(el => el.style.display = isAdminOrSoc() ? '' : 'none');
+  // Sécurité supplémentaire : si un utilisateur standard se trouve sur une page restreinte (lien direct, état précédent…), le ramener au tableau de bord
+  if (currentUserData.role === 'user') {
+    const restrictedPages = ['maintenance','documents','history','users','settings'];
+    const activeSection = document.querySelector('.section.active');
+    if (activeSection && restrictedPages.some(p => activeSection.id === 'page-'+p)) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelector('.nav-item[data-page="dashboard"]').classList.add('active');
+      document.getElementById('page-dashboard').classList.add('active');
+      document.getElementById('page-title').textContent = 'Tableau de bord';
+    }
+  }
+}
+
+// ---- NAVIGATION ----
+document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    const restrictedAdmin = ['users','settings'];
+    const restrictedStaff = ['maintenance','documents','history'];
+    if (restrictedAdmin.includes(page) && !isAdmin()) return;
+    if (restrictedStaff.includes(page) && !isAdminOrSoc()) return;
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('page-'+page).classList.add('active');
+    const titles = { dashboard:'Tableau de bord', alerts:'Alertes', vehicles:'Parc de véhicules', maintenance:'Entretiens préventifs', documents:'Documents administratifs', history:'Historique', users:'Utilisateurs', settings:'Paramètres' };
+    document.getElementById('page-title').textContent = titles[page]||page;
+    if (page === 'vehicles') renderVehicles();
+    if (page === 'maintenance') renderMaint();
+    if (page === 'documents') renderDocs();
+    if (page === 'history') renderHistory();
+    if (page === 'users') renderUsers();
+    if (page === 'settings') renderSettings();
+  });
+});
+
+// ---- LISTENERS FIRESTORE ----
+function startListeners() {
+  // Settings
+  getDoc(doc(db,'config','settings')).then(snap => { if(snap.exists()) Object.assign(settings, snap.data()); });
+
+  // Sociétés
+  onSnapshot(collection(db,'societes'), snap => {
+    allSocietes = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderSocietesSelect();
+    renderCompanyFilter();
+    renderSettingsSocietes();
+  });
+
+  // Véhicules
+  onSnapshot(collection(db,'vehicules'), snap => {
+    allVehicles = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderDashboard();
+    renderAlerts();
+    if (document.getElementById('page-vehicles').classList.contains('active')) renderVehicles();
+    if (document.getElementById('page-documents').classList.contains('active')) renderDocs();
+  });
+
+  // Entretiens
+  onSnapshot(collection(db,'entretiens'), snap => {
+    allMaint = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    if (document.getElementById('page-maintenance').classList.contains('active')) renderMaint();
+  });
+
+  // Historique
+  onSnapshot(collection(db,'historique'), snap => {
+    allHistory = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b) => {
+      const ta = a.timestamp?.toMillis?.() || 0;
+      const tb = b.timestamp?.toMillis?.() || 0;
+      return tb - ta;
+    });
+    if (document.getElementById('page-history').classList.contains('active')) renderHistory();
+  });
+
+  // Utilisateurs (admin groupe + admin société, nécessaire pour l'attribution de véhicules)
+  if (isAdminOrSoc()) {
+    onSnapshot(collection(db,'utilisateurs'), snap => {
+      allUsers = snap.docs.map(d => ({id:d.id,...d.data()}));
+      if (document.getElementById('page-users').classList.contains('active')) renderUsers();
+    });
+  }
+}
+
+function filteredVehicles() {
+  // Utilisateur standard : uniquement les véhicules qui lui sont affectés (cahier des charges §4.1)
+  if (currentUserData.role === 'user') {
+    return allVehicles.filter(v => Array.isArray(v.ownerIds) && v.ownerIds.includes(currentUser.uid));
+  }
+  const company = document.getElementById('company-filter').value;
+  if (isAdmin()) {
+    if (!company) return allVehicles;
+    return allVehicles.filter(v => v.societeId === company);
+  }
+  // Admin société : tous les véhicules de sa société
+  return allVehicles.filter(v => v.societeId === (currentUserData.societeId||''));
+}
+
+window.onCompanyFilter = function() {
+  renderDashboard(); renderAlerts();
+  if (document.getElementById('page-vehicles').classList.contains('active')) renderVehicles();
+};
+
+// ---- DASHBOARD ----
+function renderDashboard() {
+  const vehs = filteredVehicles();
+  const total = vehs.length;
+  const ok = vehs.filter(v => getVehStatus(v) === 'green').length;
+  const warn = vehs.filter(v => getVehStatus(v) === 'orange').length;
+  const danger = vehs.filter(v => getVehStatus(v) === 'red').length;
+  const insExp = vehs.filter(v => daysUntil(v.insExp) !== null && daysUntil(v.insExp) < 0).length;
+  const vtExp = vehs.filter(v => daysUntil(v.vtExp) !== null && daysUntil(v.vtExp) < 0).length;
+
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Véhicules total</div><div class="kpi-value">${total}</div><div class="kpi-sub">${allSocietes.length} sociétés</div></div>
+    <div class="kpi ok"><div class="kpi-label">En règle</div><div class="kpi-value">${ok}</div><div class="kpi-sub">${total?Math.round(ok/total*100):0}% du parc</div></div>
+    <div class="kpi warn"><div class="kpi-label">Échéance proche</div><div class="kpi-value">${warn}</div><div class="kpi-sub">≤ ${settings.seuilKm}% kilom.</div></div>
+    <div class="kpi danger"><div class="kpi-label">En dépassement</div><div class="kpi-value">${danger}</div><div class="kpi-sub">Action requise</div></div>
+    <div class="kpi danger"><div class="kpi-label">Assurances exp.</div><div class="kpi-value">${insExp}</div><div class="kpi-sub">À renouveler</div></div>
+    <div class="kpi warn"><div class="kpi-label">Visites tech. exp.</div><div class="kpi-value">${vtExp}</div><div class="kpi-sub">À planifier</div></div>
+  `;
+
+  const urgent = vehs.filter(v => getVehStatus(v) !== 'green').slice(0,10);
+  if (urgent.length === 0) {
+    document.getElementById('dash-table-wrap').innerHTML = '<div class="empty"><div class="empty-icon">✅</div>Tous les véhicules sont en règle.</div>';
+    return;
+  }
+  document.getElementById('dash-table-wrap').innerHTML = `
+    <table><thead><tr><th>Véhicule</th><th>Immat.</th><th>Société</th><th>Kilométrage</th><th>Avancement</th><th>État</th></tr></thead>
+    <tbody>${urgent.map(v => {
+      const pct = getPct(v); const kmS = getKmStatus(v); const s = getVehStatus(v);
+      const soc = allSocietes.find(x=>x.id===v.societeId);
+      return `<tr>
+        <td><strong>${v.marque||''} ${v.modele||''}</strong></td>
+        <td style="font-family:monospace">${v.immat||'—'}</td>
+        <td>${soc?soc.nom:'—'}</td>
+        <td>${fmt(v.km)} km</td>
+        <td style="min-width:120px"><div style="display:flex;align-items:center;gap:6px"><div class="prog-bar"><div class="prog-fill ${kmS}" style="width:${Math.min(pct,100)}%"></div></div><span style="font-size:11px;color:var(--text2)">${pct}%</span></div></td>
+        <td><span class="badge ${s}">${statusLabel(s)}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+// ---- ALERTS ----
+function computeAlertsFor(vehs) {
+  const alertsList = [];
+  vehs.forEach(v => {
+    const pct = getPct(v);
+    const name = `${v.marque||''} ${v.modele||''} (${v.immat||'?'})`;
+    if (pct >= 100) alertsList.push({ type:'red', vehId:v.id, title:'Dépassement kilométrique', desc:`${name} — ${pct-100 > 0 ? pct-100+'%' : ''} au-delà du cycle d'entretien.` });
+    else if (pct >= settings.seuilKm) alertsList.push({ type:'orange', vehId:v.id, title:`${settings.seuilKm}% kilométrage atteint`, desc:`${name} — ${pct}% du cycle. Planifier l'entretien.` });
+
+    const insJ = daysUntil(v.insExp);
+    if (insJ !== null) {
+      if (insJ < 0) alertsList.push({ type:'red', vehId:v.id, title:'Assurance expirée', desc:`${name} — expirée depuis ${Math.abs(insJ)} jour(s).` });
+      else if (insJ <= 14) alertsList.push({ type:'orange', vehId:v.id, title:'Assurance expire bientôt', desc:`${name} — expire dans ${insJ} jour(s) (${v.insExp}).` });
+    }
+    const vtJ = daysUntil(v.vtExp);
+    if (vtJ !== null) {
+      if (vtJ < 0) alertsList.push({ type:'red', vehId:v.id, title:'Visite technique expirée', desc:`${name} — expirée depuis ${Math.abs(vtJ)} jour(s).` });
+      else if (vtJ <= 14) alertsList.push({ type:'orange', vehId:v.id, title:'Visite technique proche', desc:`${name} — expire dans ${vtJ} jour(s) (${v.vtExp}).` });
+    }
+  });
+  return alertsList;
+}
+
+function renderAlerts() {
+  const vehs = filteredVehicles();
+  const alertsList = computeAlertsFor(vehs);
+
+  // Badge nav
+  document.getElementById('badge-alerts').textContent = alertsList.length;
+  document.getElementById('badge-alerts').style.display = alertsList.length ? '' : 'none';
+
+  // Bandeau
+  const reds = alertsList.filter(a=>a.type==='red');
+  const banner = document.getElementById('alert-banner');
+  if (reds.length) {
+    banner.classList.add('show');
+    banner.innerHTML = `⚠️ <strong>${reds.length} alerte(s) critique(s) :</strong> ` + reds.slice(0,3).map(a=>a.desc).join(' — ');
+  } else { banner.classList.remove('show'); }
+
+  // Page alertes
+  const el = document.getElementById('alerts-list');
+  if (!el) return;
+  if (alertsList.length === 0) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>Aucune alerte active.</div>'; return; }
+  el.innerHTML = alertsList.map(a => `
+    <div class="alert-row ${a.type}">
+      <div class="alert-icon">${a.type==='red'?'🔴':'🟠'}</div>
+      <div><div class="alert-title">${a.title}</div><div class="alert-desc">${a.desc}</div></div>
+    </div>`).join('');
+
+  renderMobile();
+}
+
+// ---- VEHICLES ----
+function renderVehicles() {
+  const search = (document.getElementById('veh-search').value||'').toLowerCase();
+  const statusF = document.getElementById('veh-status-filter').value;
+  let vehs = filteredVehicles();
+  if (search) vehs = vehs.filter(v => (v.marque+v.modele+v.immat+v.owner||'').toLowerCase().includes(search));
+  if (statusF) vehs = vehs.filter(v => getVehStatus(v) === statusF);
+
+  if (vehs.length === 0) {
+    document.getElementById('veh-table-wrap').innerHTML = '<div class="empty"><div class="empty-icon">🚗</div>Aucun véhicule trouvé.<br><br><button class="btn primary admin-only" onclick="openModal(\'modal-add-veh\')">+ Ajouter le premier véhicule</button></div>';
+    return;
+  }
+  document.getElementById('veh-table-wrap').innerHTML = `
+    <table><thead><tr><th>Véhicule</th><th>Immat.</th><th>Société</th><th>Utilisateur</th><th>Kilométrage</th><th>Entretien</th><th>Assurance</th><th>Visite tech.</th><th>État global</th><th>Actions</th></tr></thead>
+    <tbody>${vehs.map(v => {
+      const pct = getPct(v); const kmS = getKmStatus(v); const s = getVehStatus(v);
+      const insS = getDocStatus(v.insExp); const vtS = getDocStatus(v.vtExp);
+      const soc = allSocietes.find(x=>x.id===v.societeId);
+      return `<tr>
+        <td><strong>${v.marque||''} ${v.modele||''}</strong></td>
+        <td style="font-family:monospace">${v.immat||'—'}</td>
+        <td>${soc?soc.nom:'—'}</td>
+        <td>${v.owner||'—'}</td>
+        <td>${fmt(v.km)} km</td>
+        <td style="min-width:110px"><div style="display:flex;align-items:center;gap:6px"><div class="prog-bar"><div class="prog-fill ${kmS}" style="width:${Math.min(pct,100)}%"></div></div><span style="font-size:11px">${pct}%</span></div></td>
+        <td><span class="badge ${insS}">${docStatusLabel(insS)}</span><div style="font-size:10px;color:var(--text2);margin-top:2px">${v.insExp||'—'}</div></td>
+        <td><span class="badge ${vtS}">${docStatusLabel(vtS)}</span><div style="font-size:10px;color:var(--text2);margin-top:2px">${v.vtExp||'—'}</div></td>
+        <td><span class="badge ${s}">${statusLabel(s)}</span></td>
+        <td style="white-space:nowrap;display:flex;gap:4px">
+          <button class="btn sm" onclick="openVehDetail('${v.id}')">👁</button>
+          <button class="btn sm" onclick="openKmModal('${v.id}')">📏</button>
+          ${isAdminOrSoc()?`<button class="btn sm" onclick="editVehicle('${v.id}')">✏️</button>`:''}
+          ${isAdmin()?`<button class="btn sm" style="background:var(--orange-lt);color:var(--orange);border-color:var(--orange)" onclick="openKmCorrection('${v.id}')" title="Corriger index erroné">⚠️</button>`:''}
+          ${isAdmin()?`<button class="btn sm danger" onclick="deleteVehicle('${v.id}')">🗑</button>`:''}
+        </td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  // Appliquer admin-only
+  applyRoleUI();
+}
+window.filterVehicles = renderVehicles;
+
+// ---- VEHICLE DETAIL ----
+window.openVehDetail = function(id) {
+  const v = allVehicles.find(x=>x.id===id);
+  if (!v) return;
+  const pct = getPct(v); const kmS = getKmStatus(v); const s = getVehStatus(v);
+  const insS = getDocStatus(v.insExp); const vtS = getDocStatus(v.vtExp);
+  const soc = allSocietes.find(x=>x.id===v.societeId);
+  const remaining = Math.max((v.lastKm||0)+v.freq-v.km, 0);
+  document.getElementById('detail-title').textContent = `${v.marque||''} ${v.modele||''} — ${v.immat||''}`;
+  document.getElementById('detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      ${[['Kilométrage actuel',fmt(v.km)+' km'],['Prochain entretien',fmt((v.lastKm||0)+v.freq)+' km'],['Km restants',remaining===0?'<span style="color:var(--red)">Dépassé</span>':fmt(remaining)+' km'],['Société',soc?soc.nom:'—'],['Utilisateur',v.owner||'—'],['Service',v.service||'—'],['Assurance',`<span class="badge ${insS}">${docStatusLabel(insS)}</span> <span style="font-size:11px;color:var(--text2)">${v.insExp||'—'}</span>`],['Visite technique',`<span class="badge ${vtS}">${docStatusLabel(vtS)}</span> <span style="font-size:11px;color:var(--text2)">${v.vtExp||'—'}</span>`],['État global','<span class="badge '+s+'">'+statusLabel(s)+'</span>']].map(([l,val])=>`
+        <div style="background:var(--surface);border-radius:8px;padding:10px"><div style="font-size:11px;color:var(--text2);margin-bottom:2px">${l}</div><div style="font-size:13px;font-weight:500">${val}</div></div>`).join('')}
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Progression entretien (kilométrique)</div>
+      <div class="prog-bar" style="height:10px"><div class="prog-fill ${kmS}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">${pct}% — ${fmt(v.km)} / ${fmt((v.lastKm||0)+v.freq)} km</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn primary" onclick="closeModal('modal-veh-detail');openKmModal('${v.id}')">📏 Mettre à jour le kilométrage</button>
+      <button class="btn" onclick="closeModal('modal-veh-detail');openMaintForVehicle('${v.id}')">🔧 Ajouter entretien</button>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">Historique kilométrique</div>
+      ${allHistory.filter(h=>h.vehiculeId===id && h.type==='km').slice(0,5).map(h=>`
+        <div class="hist-item"><div class="hist-dot"></div><div class="hist-info">${fmt(h.oldKm)} → ${fmt(h.newKm)} km<div class="hist-date">${fmtDate(h.timestamp)} — ${h.auteur||'?'}</div></div></div>`).join('') || '<div style="font-size:12px;color:var(--text2)">Aucun historique</div>'}
+    </div>`;
+  openModal('modal-veh-detail');
+};
+
+// ---- KM MODAL ----
+window.openMaintForVehicle = function(vehId) {
+  // Naviguer vers la page Entretiens
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelector('.nav-item[data-page="maintenance"]').classList.add('active');
+  document.getElementById('page-maintenance').classList.add('active');
+  document.getElementById('page-title').textContent = 'Entretiens préventifs';
+  renderMaint();
+  // Ouvrir le modal avec le véhicule pré-sélectionné et le km pré-rempli
+  setTimeout(() => {
+    const mv = document.getElementById('maint-veh');
+    if (mv) {
+      mv.innerHTML = allVehicles.map(v=>`<option value="${v.id}" ${v.id===vehId?'selected':''}>${v.marque||''} ${v.modele||''} — ${v.immat||''}</option>`).join('');
+      // Pré-remplir le kilométrage avec la valeur actuelle du véhicule
+      const veh = allVehicles.find(x=>x.id===vehId);
+      if (veh) {
+        document.getElementById('maint-km').value = veh.km || '';
+        document.getElementById('maint-date').value = new Date().toISOString().split('T')[0];
+      }
+    }
+    openModal('modal-add-maint', true);
+  }, 50);
+};
+
+// Mettre à jour le km quand l'utilisateur change le véhicule dans le formulaire
+function onMaintVehChange() {
+  const vehId = document.getElementById('maint-veh').value;
+  const veh = allVehicles.find(x=>x.id===vehId);
+  if (veh) document.getElementById('maint-km').value = veh.km || '';
+}
+
+window.onMaintTypeChange = function() {
+  const val = document.getElementById('maint-type').value;
+  const isPreventif = val.includes('|preventif') || !val.includes('|');
+  const hint = document.getElementById('maint-type-hint');
+  if (hint) {
+    hint.textContent = isPreventif
+      ? '🔧 Préventif — le compteur d\'entretien sera remis à jour'
+      : '🚨 Curatif — le compteur d\'entretien ne sera PAS modifié';
+    hint.style.color = isPreventif ? 'var(--green)' : 'var(--orange)';
+  }
+};
+
+window.openKmCorrection = function(id) {
+  if (!isAdmin()) { toast('❌ Réservé aux administrateurs'); return; }
+  const v = allVehicles.find(x=>x.id===id);
+  if (!v) return;
+  kmModalVeh = v;
+  document.getElementById('km-corr-info').innerHTML = `
+    <strong>${v.marque||''} ${v.modele||''} (${v.immat||''})</strong><br>
+    Index actuel : <strong>${fmt(v.km)} km</strong><br>
+    <span style="font-size:11px">Corrigez uniquement si l'index enregistré est erroné.</span>`;
+  document.getElementById('km-corr-val').value = '';
+  document.getElementById('km-corr-motif').value = '';
+  document.getElementById('km-corr-obs').value = '';
+  openModal('modal-km-correction');
+};
+
+window.saveKmCorrection = async function() {
+  if (!isAdmin()) { toast('❌ Non autorisé'); return; }
+  if (!kmModalVeh) return;
+  const val = parseInt(document.getElementById('km-corr-val').value);
+  const motif = document.getElementById('km-corr-motif').value;
+  const obs = document.getElementById('km-corr-obs').value.trim();
+  if (!val || val <= 0) { toast('❌ Index corrigé invalide'); return; }
+  if (!motif) { toast('❌ Motif de correction obligatoire'); return; }
+  if (!confirm(`Confirmer la correction : ${fmt(kmModalVeh.km)} km → ${fmt(val)} km ?\nMotif : ${motif}`)) return;
+  const oldKm = kmModalVeh.km;
+  try {
+    await updateDoc(doc(db,'vehicules',kmModalVeh.id), { km: val });
+    await addDoc(collection(db,'historique'), {
+      vehiculeId: kmModalVeh.id,
+      type: 'correction_km',
+      oldKm, newKm: val,
+      motif, obs,
+      auteur: (currentUserData.prenom+' '+currentUserData.nom).trim(),
+      timestamp: serverTimestamp()
+    });
+    closeModal('modal-km-correction');
+    toast('✅ Index corrigé : '+fmt(oldKm)+' km → '+fmt(val)+' km');
+  } catch(e) { toast('❌ Erreur : '+e.message); }
+};
+
+window.openKmModal = function(id) {
+  const v = allVehicles.find(x=>x.id===id);
+  if (!v) return;
+  kmModalVeh = v;
+  document.getElementById('km-modal-info').textContent = `${v.marque||''} ${v.modele||''} (${v.immat||''}) — Kilométrage actuel : ${fmt(v.km)} km`;
+  document.getElementById('km-new-val').value = '';
+  document.getElementById('km-new-val').placeholder = (v.km+1).toString();
+  document.getElementById('km-hint').textContent = `La valeur doit être supérieure à ${fmt(v.km)} km`;
+  openModal('modal-km');
+};
+
+window.saveKm = async function() {
+  if (!kmModalVeh) return;
+  const val = parseInt(document.getElementById('km-new-val').value);
+  if (!val || val <= kmModalVeh.km) {
+    toast('❌ La valeur doit être supérieure à '+fmt(kmModalVeh.km)+' km'); return;
+  }
+  const oldKm = kmModalVeh.km;
+  // Étape 1 : mise à jour du kilométrage
+  try {
+    await updateDoc(doc(db,'vehicules',kmModalVeh.id), { km: val });
+  } catch(e) {
+    toast('❌ Erreur vehicules : '+e.message); return;
+  }
+  // Étape 2 : enregistrement dans l'historique
+  try {
+    await addDoc(collection(db,'historique'), {
+      vehiculeId: kmModalVeh.id, type:'km', oldKm, newKm: val,
+      auteur: (currentUserData.prenom+' '+currentUserData.nom).trim(),
+      timestamp: serverTimestamp()
+    });
+  } catch(e) {
+    toast('❌ Erreur historique : '+e.message); return;
+  }
+  closeModal('modal-km');
+  toast('✅ Kilométrage mis à jour : '+fmt(val)+' km');
+};
+
+// ---- VEHICLE CRUD ----
+function getCheckedOwners() {
+  const boxes = document.querySelectorAll('#veh-owners-list input[type=checkbox]:checked');
+  const ids = Array.from(boxes).map(b=>b.value);
+  const names = Array.from(boxes).map(b=>b.dataset.name);
+  return { ids, names };
+}
+
+function renderOwnersCheckboxes(selectedIds) {
+  selectedIds = Array.isArray(selectedIds) ? selectedIds : [];
+  const el = document.getElementById('veh-owners-list');
+  // Reset complet avant de reconstruire
+  el.innerHTML = '';
+  const standardUsers = allUsers.filter(u => u.role === 'user');
+  if (standardUsers.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text2)">Aucun utilisateur standard créé pour l\'instant.</div>';
+    return;
+  }
+  el.innerHTML = standardUsers.map(u => {
+    const fullName = (u.prenom+' '+u.nom).trim();
+    const checked = selectedIds.includes(u.id) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:5px 2px;font-size:13px;cursor:pointer">
+      <input type="checkbox" value="${u.id}" data-name="${fullName}" ${checked}>
+      <span>${fullName}${u.societeId ? ' — '+(allSocietes.find(s=>s.id===u.societeId)?.nom||'') : ''}</span>
+    </label>`;
+  }).join('');
+}
+
+window.saveVehicle = async function() {
+  const id = document.getElementById('veh-edit-id').value;
+  const { ids: ownerIds, names: ownerNames } = getCheckedOwners();
+  const data = {
+    societeId: document.getElementById('veh-societe').value,
+    marque: document.getElementById('veh-marque').value.trim(),
+    modele: document.getElementById('veh-modele').value.trim(),
+    immat: document.getElementById('veh-immat').value.trim().toUpperCase(),
+    vin: document.getElementById('veh-vin').value.trim(),
+    km: parseInt(document.getElementById('veh-km').value)||0,
+    freq: parseInt(document.getElementById('veh-freq').value)||10000,
+    lastKm: parseInt(document.getElementById('veh-last-km').value)||0,
+    ownerIds: ownerIds,
+    owner: ownerNames.join(', '),
+    service: document.getElementById('veh-service').value.trim(),
+    dateCirc: document.getElementById('veh-date-circ').value,
+    insExp: document.getElementById('veh-ins-exp').value,
+    vtExp: document.getElementById('veh-vt-exp').value,
+    updatedAt: serverTimestamp()
+  };
+  if (!data.marque||!data.modele||!data.immat||!data.societeId) { toast('❌ Champs obligatoires manquants'); return; }
+  try {
+    if (id) {
+      // En modification, on ne touche JAMAIS au kilométrage (utiliser ⚠️ pour corriger)
+      const { km, ...dataWithoutKm } = data;
+      await updateDoc(doc(db,'vehicules',id), dataWithoutKm);
+      await addDoc(collection(db,'historique'), { type:'modif_vehicule', vehiculeId:id, auteur:currentUserData.prenom+' '+currentUserData.nom, detail:'Modification véhicule '+data.immat, timestamp:serverTimestamp() });
+      toast('✅ Véhicule modifié');
+    } else {
+      data.createdAt = serverTimestamp();
+      const ref = await addDoc(collection(db,'vehicules'), data);
+      await addDoc(collection(db,'historique'), { type:'ajout_vehicule', vehiculeId:ref.id, auteur:currentUserData.prenom+' '+currentUserData.nom, detail:'Ajout véhicule '+data.immat, timestamp:serverTimestamp() });
+      toast('✅ Véhicule ajouté');
+    }
+    closeModal('modal-add-veh');
+  } catch(e) { toast('❌ Erreur : '+e.message); }
+};
+
+window.editVehicle = function(id) {
+  const v = allVehicles.find(x=>x.id===id);
+  if (!v) return;
+  openModal('modal-add-veh', true);
+  document.getElementById('veh-modal-title').textContent = 'Modifier le véhicule';
+  document.getElementById('veh-edit-id').value = id;
+  document.getElementById('veh-societe').value = v.societeId||'';
+  document.getElementById('veh-marque').value = v.marque||'';
+  document.getElementById('veh-modele').value = v.modele||'';
+  document.getElementById('veh-immat').value = v.immat||'';
+  document.getElementById('veh-vin').value = v.vin||'';
+  document.getElementById('veh-km').value = v.km||'';
+  document.getElementById('veh-km').readOnly = true;
+  document.getElementById('veh-km').style.background = 'var(--surface)';
+  document.getElementById('veh-km').style.color = 'var(--text2)';
+  document.getElementById('veh-km-warning').style.display = 'block';
+  document.getElementById('veh-freq').value = v.freq||10000;
+  document.getElementById('veh-last-km').value = v.lastKm||'';
+  renderOwnersCheckboxes(v.ownerIds||[]);
+  document.getElementById('veh-service').value = v.service||'';
+  document.getElementById('veh-date-circ').value = v.dateCirc||'';
+  document.getElementById('veh-ins-exp').value = v.insExp||'';
+  document.getElementById('veh-vt-exp').value = v.vtExp||'';
+};
+
+window.deleteVehicle = async function(id) {
+  const v = allVehicles.find(x=>x.id===id);
+  if (!confirm(`Supprimer ${v?.marque||''} ${v?.modele||''} (${v?.immat||''}) ?`)) return;
+  try {
+    await deleteDoc(doc(db,'vehicules',id));
+    await addDoc(collection(db,'historique'), { type:'suppression_vehicule', auteur:currentUserData.prenom+' '+currentUserData.nom, detail:'Suppression véhicule '+(v?.immat||id), timestamp:serverTimestamp() });
+    toast('✅ Véhicule supprimé');
+  } catch(e) { toast('❌ Erreur : '+e.message); }
+};
+
+// ---- MAINTENANCE ----
+function renderMaint() {
+  const search = (document.getElementById('maint-search')?.value||'').toLowerCase();
+  let maints = allMaint;
+  if (search) maints = maints.filter(m => (m.vehicule+m.type+(m.presta||'')).toLowerCase().includes(search));
+
+  if (currentUserData.role === 'user') {
+    // Utilisateur standard : uniquement les entretiens de ses véhicules attribués
+    const myVehIds = filteredVehicles().map(v=>v.id);
+    maints = maints.filter(m => myVehIds.includes(m.vehiculeId));
+  } else if (!isAdmin()) {
+    // Admin société : véhicules de sa société
+    maints = maints.filter(m => {
+      const v = allVehicles.find(x=>x.id===m.vehiculeId);
+      return v && v.societeId === currentUserData.societeId;
+    });
+  }
+
+  if (maints.length === 0) {
+    document.getElementById('maint-table-wrap').innerHTML = '<div class="empty"><div class="empty-icon">🔧</div>Aucun entretien enregistré.</div>'; return;
+  }
+
+  // Regrouper par véhicule
+  const byVehicle = {};
+  maints.forEach(m => {
+    const key = m.vehiculeId || 'inconnu';
+    if (!byVehicle[key]) byVehicle[key] = { name: m.vehicule||'Véhicule inconnu', items: [] };
+    byVehicle[key].items.push(m);
+  });
+
+  // Trier chaque groupe par date décroissante
+  Object.values(byVehicle).forEach(g => g.items.sort((a,b)=>(b.date||'').localeCompare(a.date||'')));
+
+  const html = Object.entries(byVehicle).map(([vehId, group], idx) => {
+    const v = allVehicles.find(x=>x.id===vehId);
+    const totalCout = group.items.reduce((s,m)=>s+(m.cout||0),0);
+    const isOpen = idx === 0; // Premier accordéon ouvert par défaut
+    return `
+    <div class="maint-accordion" style="margin-bottom:10px;border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <div class="maint-acc-header" onclick="toggleAccordion('acc-${vehId}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;background:var(--surface);user-select:none">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔧</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">${group.name}</div>
+          <div style="font-size:12px;color:var(--text2)">${group.items.length} entretien(s)</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:15px;font-weight:700;color:var(--blue)">${fmt(totalCout)} FCFA</div>
+          <div style="font-size:10px;color:var(--text2)">Total dépensé</div>
+        </div>
+        <button class="btn sm" onclick="event.stopPropagation();printMaint('${vehId}')" title="Imprimer les entretiens" style="flex-shrink:0">🖨️</button>
+        <button class="btn sm primary" onclick="event.stopPropagation();openMaintForVehicle('${vehId}')" style="flex-shrink:0">+ Ajouter</button>
+        <span style="font-size:18px;color:var(--text2);transition:transform .2s" id="arrow-${vehId}">${isOpen?'▲':'▼'}</span>
+      </div>
+      <div id="acc-${vehId}" style="display:${isOpen?'block':'none'}">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--surface)">
+            <th style="padding:8px 16px;text-align:left;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase">Type</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase">Date</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase">Kilométrage</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase">Prestataire</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase">Coût</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase">Pièces</th>
+            <th style="padding:8px 10px"></th>
+          </tr></thead>
+          <tbody>
+          ${group.items.map(m=>`
+            <tr style="border-top:1px solid var(--border)">
+              <td style="padding:10px 16px;font-weight:500">
+                ${m.type||'—'}
+                <span style="font-size:10px;padding:2px 6px;border-radius:8px;margin-left:4px;font-weight:500;background:${m.categorie==='curatif'?'var(--orange-lt)':'var(--green-lt)'};color:${m.categorie==='curatif'?'var(--orange)':'var(--green)'}">
+                  ${m.categorie==='curatif'?'CURATIF':'PRÉVENTIF'}
+                </span>
+              </td>
+              <td style="padding:10px">${m.date||'—'}</td>
+              <td style="padding:10px">${fmt(m.km)} km</td>
+              <td style="padding:10px">${m.presta||'—'}</td>
+              <td style="padding:10px">${m.cout?fmt(m.cout)+' FCFA':'—'}</td>
+              <td style="padding:10px;font-size:12px;color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${m.pieces||''}">${m.pieces||'—'}</td>
+              <td style="padding:10px;white-space:nowrap;display:flex;gap:4px">
+                ${isAdminOrSoc()?`<button class="btn sm" onclick="openEditMaint('${m.id}')">✏️</button>`:''}
+                ${isAdmin()?`<button class="btn sm danger" onclick="deleteMaint('${m.id}')">🗑</button>`:''}
+              </td>
+            </tr>
+            ${m.obs?`<tr style="border-top:none"><td colspan="7" style="padding:4px 16px 10px;font-size:12px;color:var(--text2)">📝 ${m.obs}</td></tr>`:''}`
+          ).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('maint-table-wrap').innerHTML = html;
+}
+
+window.toggleAccordion = function(id) {
+  const el = document.getElementById(id);
+  const vehId = id.replace('acc-','');
+  const arrow = document.getElementById('arrow-'+vehId);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+};
+
+window.printMaint = function(vehId) {
+  const v = allVehicles.find(x=>x.id===vehId);
+  const maints = allMaint.filter(m=>m.vehiculeId===vehId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const soc = allSocietes.find(x=>x.id===v?.societeId);
+  const preventifs = maints.filter(m=>m.categorie==='preventif'||!m.categorie);
+  const curatifs = maints.filter(m=>m.categorie==='curatif');
+  const totalPreventif = preventifs.reduce((s,m)=>s+(m.cout||0),0);
+  const totalCuratif = curatifs.reduce((s,m)=>s+(m.cout||0),0);
+  const totalCout = totalPreventif + totalCuratif;
+
+  const tableHTML = (items, titre, couleur) => items.length === 0 ? '' : `
+    <div style="font-size:13px;font-weight:700;color:${couleur};margin:16px 0 6px;padding:6px 10px;background:${couleur}18;border-left:3px solid ${couleur};border-radius:0 4px 4px 0">${titre} — ${items.length} intervention(s)</div>
+    <table>
+      <thead><tr>
+        <th>Type</th><th>Date</th><th>Kilométrage</th><th>Prestataire</th><th>Coût (FCFA)</th><th>Pièces / Observations</th>
+      </tr></thead>
+      <tbody>
+        ${items.map(m=>`<tr>
+          <td class="type">${m.type||'—'}</td>
+          <td>${m.date||'—'}</td>
+          <td>${fmt(m.km)} km</td>
+          <td>${m.presta||'—'}</td>
+          <td style="text-align:right;font-weight:500">${m.cout?fmt(m.cout):'—'}</td>
+          <td><div class="pieces">${m.pieces||''}</div>${m.obs?`<div class="obs">${m.obs}</div>`:''}</td>
+        </tr>`).join('')}
+        <tr style="font-weight:700;background:${couleur}18">
+          <td colspan="4" style="text-align:right">Sous-total ${titre.split(' ')[0]}</td>
+          <td style="text-align:right;color:${couleur};font-size:13px">${fmt(items.reduce((s,m)=>s+(m.cout||0),0))}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>`;
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head>
+    <meta charset="UTF-8">
+    <title>Historique entretiens — ${v?.marque||''} ${v?.modele||''} (${v?.immat||''})</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:20px}
+      .header{border-bottom:2px solid #185FA5;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start}
+      .logo{font-size:18px;font-weight:700;color:#185FA5}
+      .logo-sub{font-size:11px;color:#666}
+      .veh-title{font-size:16px;font-weight:700;margin-bottom:4px}
+      .veh-info{font-size:11px;color:#555;display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+      .totaux{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+      .total-box{border-radius:6px;padding:8px 12px;text-align:center}
+      .total-label{font-size:10px;color:#555;margin-bottom:2px}
+      .total-val{font-size:15px;font-weight:700}
+      table{width:100%;border-collapse:collapse;margin-bottom:8px}
+      th{background:#0F1F3D;color:#fff;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+      td{padding:6px 8px;border-bottom:1px solid #e0dfd8;vertical-align:top;font-size:11px}
+      tr:nth-child(even) td{background:#f8f7f4}
+      .type{font-weight:600}
+      .pieces{font-size:10px;color:#555}
+      .obs{font-size:10px;color:#777;font-style:italic}
+      .footer{border-top:1px solid #ddd;padding-top:10px;font-size:10px;color:#888;display:flex;justify-content:space-between;margin-top:16px}
+      @media print{body{padding:10px}}
+    </style>
+  </head><body>
+    <div class="header">
+      <div><div class="logo">🚗 FleetManager</div><div class="logo-sub">Gestion Parc Automobile</div></div>
+      <div style="text-align:right;font-size:11px;color:#555">Imprimé le ${new Date().toLocaleDateString('fr-FR')}<br>${soc?.nom||''}</div>
+    </div>
+
+    <div class="veh-title">Historique des interventions — ${v?.marque||''} ${v?.modele||''}</div>
+    <div class="veh-info">
+      <span>🔖 <strong>Immat. :</strong> ${v?.immat||'—'}</span>
+      <span>🏢 <strong>Société :</strong> ${soc?.nom||'—'}</span>
+      <span>👤 <strong>Utilisateur :</strong> ${v?.owner||'—'}</span>
+      <span>📍 <strong>Km actuel :</strong> ${fmt(v?.km)} km</span>
+    </div>
+
+    <div class="totaux">
+      <div class="total-box" style="background:#EAF3DE;border:1px solid #3B6D11">
+        <div class="total-label">🔧 Entretiens préventifs</div>
+        <div class="total-val" style="color:#3B6D11">${fmt(totalPreventif)} FCFA</div>
+        <div class="total-label">${preventifs.length} intervention(s)</div>
+      </div>
+      <div class="total-box" style="background:#FAEEDA;border:1px solid #854F0B">
+        <div class="total-label">🚨 Interventions curatives</div>
+        <div class="total-val" style="color:#854F0B">${fmt(totalCuratif)} FCFA</div>
+        <div class="total-label">${curatifs.length} intervention(s)</div>
+      </div>
+      <div class="total-box" style="background:#E6F1FB;border:1px solid #185FA5">
+        <div class="total-label">💰 Total général</div>
+        <div class="total-val" style="color:#185FA5">${fmt(totalCout)} FCFA</div>
+        <div class="total-label">${maints.length} intervention(s)</div>
+      </div>
+    </div>
+
+    ${tableHTML(preventifs, '🔧 Entretiens PRÉVENTIFS', '#3B6D11')}
+    ${tableHTML(curatifs, '🚨 Interventions CURATIVES', '#854F0B')}
+
+    <div class="footer">
+      <span>FleetManager — Document généré automatiquement</span>
+      <span>${soc?.nom||''} — ${new Date().toLocaleDateString('fr-FR')}</span>
+    </div>
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`);
+  w.document.close();
+};
+
+window.filterMaint = renderMaint;
+
+window.saveMaint = async function() {
+  const vehId = document.getElementById('maint-veh').value;
+  const v = allVehicles.find(x=>x.id===vehId);
+  const km = parseInt(document.getElementById('maint-km').value)||0;
+  const typeVal = document.getElementById('maint-type').value;
+  const [typeLabel, categorie] = typeVal.includes('|') ? typeVal.split('|') : [typeVal, 'preventif'];
+  const data = {
+    vehiculeId: vehId,
+    vehicule: v ? `${v.marque||''} ${v.modele||''} (${v.immat||''})` : '—',
+    type: typeLabel,
+    categorie, // 'preventif' ou 'curatif'
+    date: document.getElementById('maint-date').value,
+    km,
+    presta: document.getElementById('maint-presta').value.trim(),
+    cout: parseInt(document.getElementById('maint-cout').value)||0,
+    pieces: document.getElementById('maint-pieces').value.trim(),
+    obs: document.getElementById('maint-obs').value.trim(),
+    auteur: currentUserData.prenom+' '+currentUserData.nom,
+    createdAt: serverTimestamp()
+  };
+  if (!vehId || !data.date || !km) { toast('❌ Véhicule, date et kilométrage requis'); return; }
+  try {
+    await addDoc(collection(db,'entretiens'), data);
+    // Mettre à jour lastKm UNIQUEMENT pour un entretien préventif
+    if (categorie === 'preventif' && v && km > (v.lastKm||0)) {
+      await updateDoc(doc(db,'vehicules',vehId), { lastKm: km });
+    }
+    await addDoc(collection(db,'historique'), {
+      type:'entretien', vehiculeId:vehId, auteur:data.auteur,
+      detail:`[${categorie.toUpperCase()}] ${typeLabel} — ${fmt(km)} km`,
+      timestamp:serverTimestamp()
+    });
+    closeModal('modal-add-maint');
+    toast(`✅ ${categorie==='preventif'?'Entretien préventif':'Intervention curative'} enregistré${categorie==='preventif'?' — compteur remis à jour':''}`);
+  } catch(e) { toast('❌ Erreur : '+e.message); }
+};
+
+window.openEditMaint = function(id) {
+  const m = allMaint.find(x=>x.id===id);
+  if (!m) return;
+  document.getElementById('maint-edit-id').value = id;
+  document.getElementById('maint-edit-type').value = m.type||'';
+  document.getElementById('maint-edit-date').value = m.date||'';
+  document.getElementById('maint-edit-km').value = m.km||'';
+  document.getElementById('maint-edit-presta').value = m.presta||'';
+  document.getElementById('maint-edit-cout').value = m.cout||'';
+  document.getElementById('maint-edit-pieces').value = m.pieces||'';
+  document.getElementById('maint-edit-obs').value = m.obs||'';
+  openModal('modal-edit-maint');
+};
+
+window.updateMaint = async function() {
+  const id = document.getElementById('maint-edit-id').value;
+  const data = {
+    type: document.getElementById('maint-edit-type').value,
+    date: document.getElementById('maint-edit-date').value,
+    km: parseInt(document.getElementById('maint-edit-km').value)||0,
+    presta: document.getElementById('maint-edit-presta').value.trim(),
+    cout: parseInt(document.getElementById('maint-edit-cout').value)||0,
+    pieces: document.getElementById('maint-edit-pieces').value.trim(),
+    obs: document.getElementById('maint-edit-obs').value.trim(),
+  };
+  try {
+    await updateDoc(doc(db,'entretiens',id), data);
+    await addDoc(collection(db,'historique'), { type:'modif_entretien', auteur:currentUserData.prenom+' '+currentUserData.nom, detail:'Modification entretien : '+data.type, timestamp:serverTimestamp() });
+    closeModal('modal-edit-maint');
+    toast('✅ Entretien modifié');
+  } catch(e) { toast('❌ '+e.message); }
+};
+
+window.deleteMaint = async function(id) {
+  const m = allMaint.find(x=>x.id===id);
+  if (!confirm(`Supprimer l'entretien "${m?.type||''}" du ${m?.date||''} ?`)) return;
+  try {
+    await deleteDoc(doc(db,'entretiens',id));
+    await addDoc(collection(db,'historique'), { type:'suppression_entretien', auteur:currentUserData.prenom+' '+currentUserData.nom, detail:'Suppression entretien : '+(m?.type||id), timestamp:serverTimestamp() });
+    toast('✅ Entretien supprimé');
+  } catch(e) { toast('❌ '+e.message); }
+};
+
+// ---- DOCUMENTS ----
+function renderDocs() {
+  const vehs = filteredVehicles();
+  const rows = [];
+  vehs.forEach(v => {
+    const insJ = daysUntil(v.insExp);
+    const vtJ = daysUntil(v.vtExp);
+    const insS = insJ===null?'gray':insJ<0?'red':insJ<=14?'orange':'green';
+    const vtS = vtJ===null?'gray':vtJ<0?'red':vtJ<=14?'orange':'green';
+    const name = `${v.marque||''} ${v.modele||''} (${v.immat||''})`;
+    rows.push({ veh:name, type:'Assurance', exp:v.insExp||'—', s:insS, jours:insJ });
+    rows.push({ veh:name, type:'Visite technique', exp:v.vtExp||'—', s:vtS, jours:vtJ });
+  });
+
+  if (rows.length === 0) {
+    document.getElementById('docs-table-wrap').innerHTML = '<div class="empty"><div class="empty-icon">📄</div>Aucun véhicule enregistré.</div>'; return;
+  }
+  document.getElementById('docs-table-wrap').innerHTML = `
+    <table><thead><tr><th>Véhicule</th><th>Type</th><th>Expiration</th><th>Jours restants</th><th>État</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td>${r.veh}</td><td>${r.type}</td><td>${r.exp}</td>
+      <td>${r.jours===null?'—':r.jours<0?`<span style="color:var(--red)">Expiré (${Math.abs(r.jours)}j)</span>`:`${r.jours} jours`}</td>
+      <td><span class="badge ${r.s}">${r.s==='green'?'Valide':r.s==='orange'?'Bientôt':r.s==='red'?'Expiré':'—'}</span></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// ---- HISTORY ----
+function renderHistory() {
+  const search = (document.getElementById('hist-search')?.value||'').toLowerCase();
+  let hist = allHistory;
+  if (search) hist = hist.filter(h => (h.detail+h.auteur||'').toLowerCase().includes(search));
+
+  if (currentUserData.role === 'user') {
+    // Utilisateur standard : uniquement l'historique de ses véhicules attribués
+    const myVehIds = filteredVehicles().map(v=>v.id);
+    hist = hist.filter(h => h.vehiculeId && myVehIds.includes(h.vehiculeId));
+  } else if (!isAdmin()) {
+    // Admin société : véhicules de sa société
+    hist = hist.filter(h => {
+      if (!h.vehiculeId) return false;
+      const v = allVehicles.find(x=>x.id===h.vehiculeId);
+      return v && v.societeId === currentUserData.societeId;
+    });
+  }
+
+  if (hist.length === 0) {
+    document.getElementById('hist-list').innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Aucun historique.</div>'; return;
+  }
+  const icons = { km:'📏', correction_km:'⚠️', modif_vehicule:'✏️', ajout_vehicule:'🚗', suppression_vehicule:'🗑', entretien:'🔧', connexion:'🔐' };
+  document.getElementById('hist-list').innerHTML = hist.slice(0,50).map(h => `
+    <div class="hist-item">
+      <div class="hist-dot"></div>
+      <div class="hist-info">
+        <span>${icons[h.type]||'📝'} ${
+          h.type==='correction_km'
+            ? `Correction index : ${fmt(h.oldKm)} → ${fmt(h.newKm)} km — Motif : ${h.motif||'?'}${h.obs?' ('+h.obs+')':''}`
+            : h.type==='km'
+            ? `Mise à jour kilométrage : ${fmt(h.oldKm)} → ${fmt(h.newKm)} km`
+            : h.detail||h.type||'Action'
+        }</span>
+        <div class="hist-date">${fmtDate(h.timestamp)} — ${h.auteur||'Système'}</div>
+      </div>
+    </div>`).join('');
+}
+window.filterHistory = renderHistory;
+
+// ---- USERS ----
+function renderUsers() {
+  if (!isAdmin()) return;
+  if (allUsers.length === 0) {
+    document.getElementById('users-table-wrap').innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Aucun utilisateur.</div>'; return;
+  }
+  const roleLabels = { admin:'Admin groupe', admin_societe:'Admin société', user:'Utilisateur' };
+  document.getElementById('users-table-wrap').innerHTML = `
+    <table><thead><tr><th>Nom</th><th>Email</th><th>Société</th><th>Rôle</th><th>Actions</th></tr></thead>
+    <tbody>${allUsers.map(u => {
+      const soc = allSocietes.find(x=>x.id===u.societeId);
+      return `<tr>
+        <td><strong>${u.prenom||''} ${u.nom||''}</strong></td>
+        <td style="font-size:12px">${u.email||'—'}</td>
+        <td>${soc?soc.nom:'—'}</td>
+        <td><span class="badge ${u.role==='admin'?'blue':u.role==='admin_societe'?'green':'gray'}">${roleLabels[u.role]||u.role}</span></td>
+        <td><button class="btn sm danger" onclick="deleteUser('${u.id}')">🗑</button></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+window.createUser = async function() {
+  const email = document.getElementById('user-email').value.trim();
+  const pw = document.getElementById('user-password').value;
+  const prenom = document.getElementById('user-prenom').value.trim();
+  const nom = document.getElementById('user-nom').value.trim();
+  const role = document.getElementById('new-user-role').value;
+  const societeId = document.getElementById('user-societe').value;
+  if (!email||!pw||!prenom||!nom) { toast('❌ Tous les champs obligatoires'); return; }
+  if (pw.length < 6) { toast('❌ Mot de passe minimum 6 caractères'); return; }
+  try {
+    // Création via l'instance secondaire : ne touche pas à la session admin en cours
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pw);
+    await setDoc(doc(db,'utilisateurs',cred.user.uid), {
+      prenom, nom, email, role, societeId,
+      createdAt: serverTimestamp()
+    });
+    await signOut(secondaryAuth); // déconnecte uniquement l'instance secondaire
+    await addDoc(collection(db,'historique'), { type:'ajout_utilisateur', auteur:currentUserData.prenom+' '+currentUserData.nom, detail:`Création utilisateur ${prenom} ${nom} (${role})`, timestamp:serverTimestamp() });
+    closeModal('modal-add-user');
+    toast('✅ Utilisateur créé : '+email+' — rôle : '+role);
+  } catch(e) { toast('❌ Erreur : '+e.message); }
+};
+
+window.deleteUser = async function(id) {
+  if (!confirm('Supprimer cet utilisateur ?')) return;
+  try { await deleteDoc(doc(db,'utilisateurs',id)); toast('✅ Utilisateur supprimé'); }
+  catch(e) { toast('❌ '+e.message); }
+};
+
+// ---- SOCIETES ----
+window.editSociete = function(id) {
+  const s = allSocietes.find(x=>x.id===id);
+  if (!s) return;
+  openModal('modal-add-societe', true);
+  document.getElementById('soc-modal-title').textContent = 'Modifier la société';
+  document.getElementById('soc-edit-id').value = id;
+  document.getElementById('soc-nom').value = s.nom||'';
+  document.getElementById('soc-code').value = s.code||'';
+  document.getElementById('soc-resp').value = s.responsable||'';
+  document.getElementById('soc-email').value = s.email||'';
+};
+
+window.deleteSociete = async function(id, nom) {
+  const vehCount = allVehicles.filter(v=>v.societeId===id).length;
+  if (vehCount > 0) { toast(`❌ Impossible : ${vehCount} véhicule(s) rattaché(s) à cette société`); return; }
+  if (!confirm(`Supprimer la société "${nom}" ?`)) return;
+  try {
+    await deleteDoc(doc(db,'societes',id));
+    await addDoc(collection(db,'historique'), { type:'suppression_societe', auteur:currentUserData.prenom+' '+currentUserData.nom, detail:'Suppression société : '+nom, timestamp:serverTimestamp() });
+    toast('✅ Société supprimée');
+  } catch(e) { toast('❌ '+e.message); }
+};
+
+window.saveSociete = async function() {
+  const id = document.getElementById('soc-edit-id').value;
+  const nom = document.getElementById('soc-nom').value.trim();
+  const code = document.getElementById('soc-code').value.trim().toUpperCase();
+  if (!nom||!code) { toast('❌ Nom et code requis'); return; }
+  const data = { nom, code, responsable:document.getElementById('soc-resp').value.trim(), email:document.getElementById('soc-email').value.trim() };
+  try {
+    if (id) {
+      await updateDoc(doc(db,'societes',id), data);
+      toast('✅ Société modifiée');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db,'societes'), data);
+      await addDoc(collection(db,'historique'), { type:'ajout_societe', auteur:currentUserData.prenom+' '+currentUserData.nom, detail:'Ajout société : '+nom, timestamp:serverTimestamp() });
+      toast('✅ Société ajoutée');
+    }
+    closeModal('modal-add-societe');
+  } catch(e) { toast('❌ '+e.message); }
+};
+
+function renderSocietesSelect() {
+  const selects = ['veh-societe','user-societe'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">— Choisir —</option>' + allSocietes.map(s=>`<option value="${s.id}">${s.nom}</option>`).join('');
+  });
+  const maintVeh = document.getElementById('maint-veh');
+  if (maintVeh) maintVeh.innerHTML = allVehicles.map(v=>`<option value="${v.id}">${v.marque||''} ${v.modele||''} — ${v.immat||''}</option>`).join('');
+}
+
+function renderCompanyFilter() {
+  const sel = document.getElementById('company-filter');
+  sel.innerHTML = '<option value="">Toutes les sociétés</option>' + allSocietes.map(s=>`<option value="${s.id}">${s.nom}</option>`).join('');
+  if (!isAdmin()) { sel.value = currentUserData?.societeId||''; sel.disabled = true; }
+}
+
+function renderSettingsSocietes() {
+  const el = document.getElementById('societes-list');
+  if (!el) return;
+  if (allSocietes.length === 0) { el.innerHTML = '<div style="font-size:12px;color:var(--text2)">Aucune société enregistrée.</div>'; return; }
+  el.innerHTML = `<table style="table-layout:fixed;width:100%"><thead><tr><th style="width:45%">Société</th><th style="width:12%">Code</th><th style="width:28%">Responsable</th><th style="width:15%">Actions</th></tr></thead><tbody>${allSocietes.map(s=>`<tr>
+    <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.nom}</td>
+    <td style="font-family:monospace">${s.code}</td>
+    <td>${s.responsable||'—'}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn sm" onclick="editSociete('${s.id}')" title="Modifier">✏️</button>
+      <button class="btn sm danger" onclick="deleteSociete('${s.id}','${s.nom}')" title="Supprimer">🗑</button>
+    </div></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+// ---- SETTINGS ----
+function renderSettings() {
+  document.getElementById('seuil-km').value = settings.seuilKm||80;
+  document.getElementById('freq-default').value = settings.freqDefault||10000;
+  document.getElementById('alert-j1').value = settings.alertJ1||14;
+  document.getElementById('alert-j2').value = settings.alertJ2||7;
+  document.getElementById('alert-j3').value = settings.alertJ3||5;
+  renderSettingsSocietes();
+}
+
+window.saveSettings = async function() {
+  settings = {
+    seuilKm: parseInt(document.getElementById('seuil-km').value)||80,
+    freqDefault: parseInt(document.getElementById('freq-default').value)||10000,
+    alertJ1: parseInt(document.getElementById('alert-j1').value)||14,
+    alertJ2: parseInt(document.getElementById('alert-j2').value)||7,
+    alertJ3: parseInt(document.getElementById('alert-j3').value)||5,
+  };
+  try {
+    await setDoc(doc(db,'config','settings'), settings);
+    toast('✅ Paramètres enregistrés');
+    renderDashboard(); renderAlerts();
+  } catch(e) { toast('❌ '+e.message); }
+};
+
+// ---- EXPORT CSV ----
+window.exportCSV = function() {
+  const vehs = filteredVehicles();
+  const headers = ['Marque','Modèle','Immatriculation','VIN','Kilométrage','Fréq. entretien','Dernier entretien km','Utilisateur','Service','Expir. assurance','Expir. visite tech.','État'];
+  const rows = vehs.map(v => [v.marque||'',v.modele||'',v.immat||'',v.vin||'',v.km||0,v.freq||0,v.lastKm||0,v.owner||'',v.service||'',v.insExp||'',v.vtExp||'',statusLabel(getVehStatus(v))]);
+  const csv = [headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = `parc_vehicules_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('✅ Export CSV téléchargé');
+};
+
+// ---- MODALS ----
+window.openModal = function(id, skipReset) {
+  document.getElementById(id).classList.add('open');
+  if (skipReset) return;
+  // Reset maint-veh quand on ouvre modal entretien
+  if (id==='modal-add-maint') {
+    const mv = document.getElementById('maint-veh');
+    if (mv) {
+      mv.innerHTML = allVehicles.map(v=>`<option value="${v.id}">${v.marque||''} ${v.modele||''} — ${v.immat||''}</option>`).join('');
+      const firstVeh = allVehicles[0];
+      if (firstVeh) document.getElementById('maint-km').value = firstVeh.km || '';
+    }
+    // Reset complet de tous les champs
+    document.getElementById('maint-type').value = 'Vidange moteur';
+    document.getElementById('maint-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('maint-presta').value = '';
+    document.getElementById('maint-cout').value = '';
+    document.getElementById('maint-pieces').value = '';
+    document.getElementById('maint-obs').value = '';
+  }
+  if (id==='modal-add-societe') {
+    document.getElementById('soc-modal-title').textContent = 'Ajouter une société';
+    document.getElementById('soc-edit-id').value = '';
+    ['soc-nom','soc-code','soc-resp','soc-email'].forEach(f=>{ const el=document.getElementById(f); if(el) el.value=''; });
+  }
+  if (id==='modal-add-veh') {
+    document.getElementById('veh-modal-title').textContent = 'Ajouter un véhicule';
+    document.getElementById('veh-edit-id').value = '';
+    ['veh-marque','veh-modele','veh-immat','veh-vin','veh-service'].forEach(f=>document.getElementById(f).value='');
+    ['veh-km','veh-freq','veh-last-km'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('veh-km').readOnly = false;
+    document.getElementById('veh-km').style.background = '';
+    document.getElementById('veh-km').style.color = '';
+    document.getElementById('veh-km-warning').style.display = 'none';
+    ['veh-date-circ','veh-ins-exp','veh-vt-exp'].forEach(f=>document.getElementById(f).value='');
+    renderOwnersCheckboxes([]);
+  }
+};
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+// ================= MOBILE VIEW =================
+let mKmVeh = null;
+
+window.refreshMobile = function() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) {
+    btn.classList.add('spinning');
+    setTimeout(() => btn.classList.remove('spinning'), 650);
+  }
+  renderMobile();
+  toast('✅ Données actualisées');
+};
+
+document.querySelectorAll('.m-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.m-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.m-section').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.mtab).classList.add('active');
+  });
+});
+
+function renderMobile() {
+  if (!currentUserData) return;
+  renderMobileVehicles();
+  renderMobileAlerts();
+  renderMobileHistory();
+}
+
+function myMobileVehicles() {
+  // Utilisateur standard : uniquement ses véhicules affectés. Admin : tout son périmètre.
+  if (currentUserData.role === 'user') {
+    return allVehicles.filter(v => Array.isArray(v.ownerIds) && v.ownerIds.includes(currentUser.uid));
+  }
+  return filteredVehicles();
+}
+
+function renderMobileVehicles() {
+  const el = document.getElementById('m-vehicles');
+  if (!el) return;
+  const vehs = myMobileVehicles();
+  if (vehs.length === 0) {
+    el.innerHTML = `<div class="m-empty"><div class="m-empty-icon">🚗</div>Aucun véhicule ${currentUserData.role==='user'?'ne vous est affecté':'enregistré'}.</div>`;
+    return;
+  }
+  el.innerHTML = vehs.map(v => {
+    const pct = getPct(v); const kmS = getKmStatus(v); const s = getVehStatus(v);
+    const remaining = Math.max((v.lastKm||0)+v.freq-v.km, 0);
+    const insJ = daysUntil(v.insExp); const vtJ = daysUntil(v.vtExp);
+    const docWarnings = [];
+    if (insJ!==null && insJ<=14) docWarnings.push(insJ<0 ? '⚠️ Assurance expirée' : '⚠️ Assurance expire dans '+insJ+'j');
+    if (vtJ!==null && vtJ<=14) docWarnings.push(vtJ<0 ? '⚠️ Visite technique expirée' : '⚠️ Visite technique expire dans '+vtJ+'j');
+    return `
+    <div class="m-vcard">
+      <div class="m-vcard-top">
+        <div class="m-vcard-icon">🚗</div>
+        <div>
+          <div class="m-vcard-name">${v.marque||''} ${v.modele||''}</div>
+          <div class="m-vcard-plate">${v.immat||'—'}</div>
+          ${v.owner?`<div style="font-size:12px;color:var(--text2);margin-top:2px">👤 ${v.owner}</div>`:''}
+        </div>
+        <div class="m-vcard-status">
+          <div class="m-status-pill ${s}"><span class="m-status-dot"></span>${statusLabel(s)}</div>
+        </div>
+      </div>
+      <div class="m-info-grid">
+        <div class="m-info-box"><div class="m-info-label">Kilométrage actuel</div><div class="m-info-value">${fmt(v.km)} km</div></div>
+        <div class="m-info-box"><div class="m-info-label">Km avant échéance</div><div class="m-info-value" style="color:${remaining===0?'var(--red)':'var(--text)'}">${remaining===0?'Dépassé':fmt(remaining)+' km'}</div></div>
+      </div>
+      <div class="m-prog-wrap">
+        <div class="m-prog-label"><span>Progression entretien</span><span>${pct}%</span></div>
+        <div class="m-prog-bar"><div class="m-prog-fill ${kmS}" style="width:${Math.min(pct,100)}%"></div></div>
+        ${docWarnings.length?`<div class="m-prog-sub" style="text-align:left;color:var(--red);font-weight:500">${docWarnings.join(' · ')}</div>`:''}
+      </div>
+      <button class="m-km-btn" onclick="openMKmSheet('${v.id}')">📏 Mettre à jour le kilométrage</button>
+    </div>`;
+  }).join('');
+}
+
+function renderMobileAlerts() {
+  const el = document.getElementById('m-alerts');
+  if (!el) return;
+  const vehs = myMobileVehicles();
+  const alerts = computeAlertsFor(vehs);
+  if (alerts.length === 0) {
+    el.innerHTML = `<div class="m-empty"><div class="m-empty-icon">✅</div>Aucune alerte active.</div>`;
+    return;
+  }
+  el.innerHTML = alerts.map(a => `
+    <div class="m-alert ${a.type}">
+      <div class="m-alert-icon">${a.type==='red'?'🔴':'🟠'}</div>
+      <div><div class="m-alert-title">${a.title}</div><div class="m-alert-desc">${a.desc}</div></div>
+    </div>`).join('');
+
+  // Bandeau mobile
+  const reds = alerts.filter(a=>a.type==='red');
+  const banner = document.getElementById('m-banner');
+  if (banner) {
+    if (reds.length) { banner.classList.add('show'); banner.textContent = `⚠️ ${reds.length} alerte(s) critique(s) à traiter`; }
+    else banner.classList.remove('show');
+  }
+}
+
+function renderMobileHistory() {
+  const el = document.getElementById('m-history');
+  if (!el) return;
+  const myVehs = myMobileVehicles();
+  const myVehIds = myVehs.map(v=>v.id);
+
+  // Entretiens préventifs des véhicules de l'utilisateur
+  // Les anciens entretiens sans champ 'categorie' sont traités comme préventifs par défaut
+  const myMaints = allMaint.filter(m =>
+    myVehIds.includes(m.vehiculeId) &&
+    m.categorie !== 'curatif'
+  ).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  if (myMaints.length === 0 && allHistory.filter(h=>h.vehiculeId && myVehIds.includes(h.vehiculeId)).length === 0) {
+    el.innerHTML = `<div class="m-empty"><div class="m-empty-icon">📋</div>Aucun historique pour le moment.</div>`;
+    return;
+  }
+
+  // Regrouper les entretiens par véhicule
+  let html = '';
+  myVehs.forEach(v => {
+    const vMaints = myMaints.filter(m=>m.vehiculeId===v.id);
+    if (vMaints.length === 0) return;
+    const totalCout = vMaints.reduce((s,m)=>s+(m.cout||0),0);
+    html += `
+      <div style="background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div style="background:var(--blue-lt);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--blue)">${v.marque||''} ${v.modele||''}</div>
+            <div style="font-size:11px;color:var(--text2)">${v.immat||''} — ${vMaints.length} entretien(s) préventif(s)</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;color:var(--blue)">${fmt(totalCout)} FCFA</div>
+            <div style="font-size:10px;color:var(--text2)">Total</div>
+          </div>
+        </div>
+        ${vMaints.map(m=>`
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--green-lt);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🔧</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">${m.type||'—'}</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">${m.date||'—'} · ${fmt(m.km)} km</div>
+              ${m.presta?`<div style="font-size:11px;color:var(--text2)">Prestataire : ${m.presta}</div>`:''}
+              ${m.pieces?`<div style="font-size:11px;color:var(--text2)">Pièces : ${m.pieces}</div>`:''}
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--green);flex-shrink:0">${m.cout?fmt(m.cout)+' FCFA':''}</div>
+          </div>`).join('')}
+      </div>`;
+  });
+
+  el.innerHTML = html || `<div class="m-empty"><div class="m-empty-icon">🔧</div>Aucun entretien préventif enregistré.</div>`;
+}
+
+window.openMKmSheet = function(id) {
+  const v = allVehicles.find(x=>x.id===id);
+  if (!v) return;
+  mKmVeh = v;
+  document.getElementById('m-km-sub').textContent = `${v.marque||''} ${v.modele||''} (${v.immat||''}) — actuel : ${fmt(v.km)} km`;
+  document.getElementById('m-km-input').value = '';
+  document.getElementById('m-km-input').placeholder = (v.km+1).toString();
+  document.getElementById('m-km-hint').textContent = `La valeur doit être supérieure à ${fmt(v.km)} km`;
+  document.getElementById('m-km-sheet').classList.add('open');
+  setTimeout(()=>document.getElementById('m-km-input').focus(), 200);
+};
+
+window.closeMKmSheet = function() {
+  document.getElementById('m-km-sheet').classList.remove('open');
+  mKmVeh = null;
+};
+document.getElementById('m-km-sheet').addEventListener('click', closeMKmSheet);
+
+window.saveMKm = async function() {
+  if (!mKmVeh) return;
+  const val = parseInt(document.getElementById('m-km-input').value);
+  if (!val || val <= mKmVeh.km) {
+    document.getElementById('m-km-hint').innerHTML = `<span style="color:var(--red)">❌ La valeur doit être supérieure à ${fmt(mKmVeh.km)} km</span>`;
+    return;
+  }
+  try {
+    const oldKm = mKmVeh.km;
+    await updateDoc(doc(db,'vehicules',mKmVeh.id), { km: val });
+    await addDoc(collection(db,'historique'), {
+      vehiculeId: mKmVeh.id, type:'km', oldKm, newKm: val,
+      auteur: (currentUserData.prenom+' '+currentUserData.nom).trim(),
+      timestamp: serverTimestamp()
+    });
+    closeMKmSheet();
+    toast('✅ Kilométrage mis à jour : '+fmt(val)+' km');
+  } catch(e) { toast('❌ Erreur : '+e.message); }
+};
+
+</script>
+</body>
+</html>
